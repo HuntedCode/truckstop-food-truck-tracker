@@ -1,0 +1,55 @@
+# ===== Backend (Django / Python) =====
+venv/
+.venv/
+__pycache__/
+*.pyc
+db.sqlite3
+*.env
+.env
+.env.local
+.env.*.local
+/staticfiles/
+/media/
+logs/
+*.log
+
+# ===== Mobile / Web frontend (Node / React Native / Expo) =====
+node_modules/
+package-lock.json
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.key
+*.keystore
+*.mobileprovision
+*.apk
+*.aab
+*.hprof
+*.tsbuildinfo
+
+# ===== Tooling / IDE / OS =====
+.claude
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.VSCodeCounter/
+coverage/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
