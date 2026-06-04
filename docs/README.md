@@ -14,7 +14,13 @@ System documentation for TruckStop. Per the project standard, when a system's be
 
 ## Index
 
-_No docs yet, the project is at foundation stage. Add entries here as systems are built._
+| Doc | What it covers |
+|-----|----------------|
+| [design/product-strategy.md](design/product-strategy.md) | North star (trustworthy freshness), positioning (the owner value platform), market analysis, and the monetization model. |
+| [design/roadmap.md](design/roadmap.md) | Phased feature plan: MVP scope and build order, the owner-value SaaS layer, and deferred-but-designed-for features. |
+| [architecture/tech-stack.md](architecture/tech-stack.md) | Locked technical decisions: PostGIS/GeoDjango, MapLibre + geocoding wrapper, Render hosting, role split, and the cost model. |
+
+_Next docs to write (during the MVP build): `architecture/data-model.md`, `reference/api-endpoints.md`, `guides/local-dev.md`._
 
 ## Writing Docs
 
