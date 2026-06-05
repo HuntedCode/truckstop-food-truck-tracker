@@ -4,7 +4,13 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from .forms import EmailAuthenticationForm
-from .views import DashboardHomeView, RegisterView, StyleGuideView
+from .views import (
+    DashboardHomeView,
+    RegisterView,
+    StyleGuideView,
+    TruckCreateView,
+    TruckUpdateView,
+)
 
 urlpatterns = [
     path(
@@ -22,6 +28,12 @@ urlpatterns = [
     ),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", DashboardHomeView.as_view(), name="dashboard"),
+    path("dashboard/truck/new/", TruckCreateView.as_view(), name="truck-create"),
+    path(
+        "dashboard/truck/<slug:slug>/edit/",
+        TruckUpdateView.as_view(),
+        name="truck-edit",
+    ),
 ]
 
 if settings.DEBUG:

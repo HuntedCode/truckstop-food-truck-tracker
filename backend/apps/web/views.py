@@ -1,10 +1,13 @@
+from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
-from django.views.generic.edit import FormView
+from django.views.generic.edit import CreateView, FormView, UpdateView
 
-from .forms import OwnerRegistrationForm
+from apps.trucks.models import Truck
+
+from .forms import OwnerRegistrationForm, TruckEditForm, TruckForm
 from .mixins import OwnerRequiredMixin
 
 
@@ -31,6 +34,50 @@ class DashboardHomeView(OwnerRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["trucks"] = self.request.user.trucks.select_related("primary_cuisine").all()
+        return ctx
+
+
+class TruckCreateView(OwnerRequiredMixin, CreateView):
+    model = Truck
+    form_class = TruckForm
+    template_name = "web/truck_form.html"
+    success_url = reverse_lazy("dashboard")
+
+    def form_valid(self, form):
+        # Stamp ownership from the session, never from posted data.
+        form.instance.owner = self.request.user
+        messages.success(self.request, f'"{form.instance.name}" created.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Add a truck"
+        ctx["subtitle"] = (
+            "Tell customers what you serve. Photos and details are optional, add them now or later."
+        )
+        ctx["submit_label"] = "Create truck"
+        return ctx
+
+
+class TruckUpdateView(OwnerRequiredMixin, UpdateView):
+    model = Truck
+    form_class = TruckEditForm
+    template_name = "web/truck_form.html"
+    success_url = reverse_lazy("dashboard")
+
+    def get_queryset(self):
+        # Scope to the owner's own trucks: another owner's slug 404s, not 403.
+        return self.request.user.trucks.all()
+
+    def form_valid(self, form):
+        messages.success(self.request, f'"{form.instance.name}" updated.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Edit truck"
+        ctx["subtitle"] = "Update your truck's details, photos, and status."
+        ctx["submit_label"] = "Save changes"
         return ctx
 
 

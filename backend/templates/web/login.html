@@ -6,15 +6,7 @@
 
   <form method="post" class="space-y-4">
     {% csrf_token %}
-    {% for field in form %}
-      <div>
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">{{ field.label }}</label>
-        {{ field }}
-      </div>
-    {% endfor %}
-    {% if form.non_field_errors %}
-      <p class="text-primary text-sm">{{ form.non_field_errors|striptags }}</p>
-    {% endif %}
+    {% include "web/_form_fields.html" %}
     <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg py-2.5 transition-colors">
       Log in
     </button>

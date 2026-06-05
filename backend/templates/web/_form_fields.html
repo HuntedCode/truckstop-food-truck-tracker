@@ -1,0 +1,19 @@
+{% comment %}
+Shared form-field renderer for the dashboard forms (register, login, truck).
+Expects `form` in context. Caller provides the <form> wrapper, csrf, and submit.
+{% endcomment %}
+{% for field in form %}
+  <div>
+    <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">{{ field.label }}</label>
+    {{ field }}
+    {% if field.help_text %}
+      <p class="text-xs text-ink-muted mt-1">{{ field.help_text }}</p>
+    {% endif %}
+    {% if field.errors %}
+      <p class="text-primary text-sm mt-1">{{ field.errors|join:" " }}</p>
+    {% endif %}
+  </div>
+{% endfor %}
+{% if form.non_field_errors %}
+  <p class="text-primary text-sm">{{ form.non_field_errors|striptags }}</p>
+{% endif %}
