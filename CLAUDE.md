@@ -89,4 +89,4 @@ System docs live in `docs/` (see `docs/README.md`). Per the global standard, whe
 
 ## Current Status
 
-**Foundation only.** Git, standards, and docs scaffold exist. `backend/` and `mobile/` are not yet scaffolded. Next session: plan the data model and stand up the Django backend + DRF API skeleton.
+**Backend skeleton stood up.** Planning docs are complete (see `docs/`). `backend/` is scaffolded and verified: Django 5.2 with split settings, Docker Compose (Postgres + PostGIS), the custom `accounts.User` (owner/customer role split), DRF wired for JWT + session auth, a `/api/v1/health/` endpoint, and pytest (passing) against a PostGIS test DB. See `docs/guides/local-dev.md`. `mobile/` is not yet scaffolded. Next: build the MVP domain models (Truck, Appearance, PresenceConfirmation, Follow, EngagementEvent, notifications) per `docs/architecture/data-model.md`, each with tests.

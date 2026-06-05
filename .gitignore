@@ -9,9 +9,17 @@ db.sqlite3
 .env.local
 .env.*.local
 /staticfiles/
+**/staticfiles/
+**/media/
 /media/
 logs/
 *.log
+
+# Python test / tooling artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
 
 # ===== Mobile / Web frontend (Node / React Native / Expo) =====
 node_modules/

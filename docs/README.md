@@ -29,6 +29,7 @@ System documentation for TruckStop. Per the project standard, when a system's be
 | [architecture/scaling.md](architecture/scaling.md) | How we design for growth without over-building: one-way vs two-way doors, scale assumptions, the trigger-to-lever playbook, and what we deliberately do not build yet. |
 | [architecture/decisions/](architecture/decisions/) | Architecture Decision Records (ADRs): the significant, hard-to-reverse decisions with context, choice, and what would make us revisit. |
 | [guides/testing.md](guides/testing.md) | The testing strategy: principles, the test pyramid, backend/mobile tooling, what to test at each layer, and the CI gate. |
+| [guides/local-dev.md](guides/local-dev.md) | How to run the backend locally via Docker Compose (Postgres+PostGIS): quick start, tests, common commands, layout. |
 
 _Next docs to write (during the MVP build): `reference/api-endpoints.md`, `guides/local-dev.md`._
 
