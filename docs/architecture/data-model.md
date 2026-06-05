@@ -234,6 +234,7 @@ Each hangs off existing core fields so it is an additive migration, not a rework
 | `SavedLocation` | owner's reusable spots (geocode once, reuse) | `Truck`, `Appearance` |
 | `RecurringSchedule` | template that generates `Appearance` rows | `Appearance` |
 | `Market` / `Region` | geographic dimension for multi-city (per-city liquidity metrics, future partitioning seam) | `Truck`, `Appearance.location` |
+| `Event` (+ `Appearance.event`) | group appearances under a named public event (festival/concert); point or polygon geo; **follower notifications must aggregate by event** | `Appearance` |
 | `Subscription` | (owner, plan, status, Stripe ids) for SaaS billing | `Truck` / `User` |
 
 ## Migration / build order

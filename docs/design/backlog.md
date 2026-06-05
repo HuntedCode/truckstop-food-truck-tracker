@@ -20,6 +20,13 @@
 ## Notifications (beyond the Phase 1 go-live push)
 - **Geofenced "a truck you follow is nearby" alerts** (pairs with live tracking).
 
+## Events
+- Group truck appearances under a named **public event** (festival, concert) with a "trucks at this event" view.
+- **Aggregated event notifications**: one "X trucks you follow are at this event" push, never one per truck.
+- **Event gamification**: visit N trucks at an event for a badge/reward (builds on loyalty).
+- **Event sponsorship / promo slots** (builds on featured placement).
+- (Hosting our own events is a separate strategic bet, not a backlog feature. See [roadmap.md](roadmap.md).)
+
 ## Internationalization
 - **Multi-language (i18n)** and a **metric/imperial unit** preference.
 
