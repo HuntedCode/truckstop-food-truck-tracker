@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.views.generic import RedirectView
 
 from .forms import EmailAuthenticationForm
-from .views import DashboardHomeView, RegisterView
+from .views import DashboardHomeView, RegisterView, StyleGuideView
 
 urlpatterns = [
     path(
@@ -22,3 +23,7 @@ urlpatterns = [
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", DashboardHomeView.as_view(), name="dashboard"),
 ]
+
+if settings.DEBUG:
+    # Dev-only design reference.
+    urlpatterns += [path("style/", StyleGuideView.as_view(), name="style-guide")]

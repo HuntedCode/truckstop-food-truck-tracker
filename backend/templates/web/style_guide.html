@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Style guide · TruckStop{% endblock %}
+{% block content %}
+<div class="space-y-10">
+
+  <section>
+    <h1 class="font-display text-3xl font-bold">Style guide</h1>
+    <p class="text-ink-muted">Warm Street-Food: palette, type, and components. Dev reference.</p>
+  </section>
+
+  <!-- Palette -->
+  <section>
+    <h2 class="font-display text-xl font-bold mb-4">Colour palette</h2>
+    {% for group_name, swatches in palette %}
+    <h3 class="text-sm font-semibold text-ink-muted uppercase tracking-wide mb-2">{{ group_name }}</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+      {% for name, hex, desc in swatches %}
+      <div class="bg-surface border border-border rounded-xl overflow-hidden">
+        <div class="h-16 border-b border-border" style="background: {{ hex }};"></div>
+        <div class="p-3">
+          <div class="font-medium text-sm">{{ name }}</div>
+          <div class="text-xs text-ink-muted font-mono">{{ hex }}</div>
+          <div class="text-xs text-ink-muted mt-1">{{ desc }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- Typography -->
+  <section>
+    <h2 class="font-display text-xl font-bold mb-4">Typography</h2>
+    <div class="bg-surface border border-border rounded-2xl p-5 space-y-3">
+      <p class="text-xs text-ink-muted">Headings — Poppins</p>
+      <p class="font-display text-3xl font-bold">Find your truck</p>
+      <p class="font-display text-xl font-semibold">Taco Loco is live now</p>
+      <hr class="border-border">
+      <p class="text-xs text-ink-muted">Body — Inter</p>
+      <p class="text-base">The warm, appetizing body copy customers read while tracking down a great meal nearby. Clarity always wins when it conflicts with flavour.</p>
+      <p class="text-sm text-ink-muted">Secondary text and captions sit in muted ink.</p>
+    </div>
+  </section>
+
+  <!-- Components -->
+  <section>
+    <h2 class="font-display text-xl font-bold mb-4">Components</h2>
+    <div class="space-y-4">
+
+      <div class="bg-surface border border-border rounded-2xl p-5">
+        <p class="text-xs text-ink-muted mb-3">Buttons</p>
+        <div class="flex flex-wrap gap-3">
+          <button class="bg-primary hover:bg-primary-dark text-white font-medium rounded-lg px-4 py-2 transition-colors">Primary</button>
+          <button class="bg-accent text-ink font-medium rounded-lg px-4 py-2">Accent</button>
+          <button class="bg-white border border-border text-ink font-medium rounded-lg px-4 py-2">Secondary</button>
+        </div>
+      </div>
+
+      <div class="bg-surface border border-border rounded-2xl p-5">
+        <p class="text-xs text-ink-muted mb-3">Status &amp; trust</p>
+        <div class="flex flex-wrap items-center gap-3 text-xs font-medium">
+          <span class="px-2.5 py-1 rounded-full bg-status-here/15 text-status-here">● Here now</span>
+          <span class="px-2.5 py-1 rounded-full bg-status-soon/15 text-status-soon">Scheduled</span>
+          <span class="px-2.5 py-1 rounded-full bg-status-away/15 text-ink-muted">Closed</span>
+          <span class="text-status-here font-semibold">★ Verified</span>
+        </div>
+      </div>
+
+      <div class="bg-surface border border-border rounded-2xl p-5">
+        <p class="text-xs text-ink-muted mb-3">Truck card (with cold-start fallback)</p>
+        <div class="bg-base border border-border rounded-2xl overflow-hidden max-w-sm">
+          <div class="h-28 flex items-center justify-center text-white text-4xl" style="background: #E84A27;">🌮</div>
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <div class="font-display font-semibold text-lg">Taco Loco</div>
+              <span class="text-xs px-2 py-1 rounded-full bg-status-here/15 text-status-here font-medium">● Here now</span>
+            </div>
+            <div class="text-sm text-ink-muted mt-0.5">Tacos · ★ Verified · 0.3 mi</div>
+            <button class="mt-3 w-full bg-accent text-ink font-medium rounded-lg py-2">I'm here now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+{% endblock %}
