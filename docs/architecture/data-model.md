@@ -7,6 +7,17 @@
 
 Detailed models are the **MVP core** (the thin end-to-end slice). Phase 1+ entities are **sketched, not built**, to prove the core does not preclude them. See [Designed-for-later](#designed-for-later-sketched-not-built).
 
+## App layout
+
+MVP models are grouped into four focused Django apps (plus the existing `accounts` and `core`):
+
+| App | Models |
+|---|---|
+| `trucks` | `Cuisine`, `Truck`, `TruckVerification` |
+| `appearances` | `Appearance`, `PresenceConfirmation` |
+| `engagement` | `Follow`, `EngagementEvent` |
+| `notifications` | `NotificationPreference`, `PushToken` |
+
 ## Conventions
 
 - **Base fields:** every model has `created_at` and `updated_at` (a shared `TimeStampedModel` abstract base).
@@ -79,7 +90,8 @@ Drives discovery filtering **and** the cold-start fallback imagery (design-syste
 | `owner` | FK -> User (`PROTECT`) | The managing owner account. |
 | `name` | CharField | Truck name. |
 | `slug` | SlugField, unique | Public URL. |
-| `cuisine` | FK -> Cuisine (`PROTECT`, null=True) | Primary cuisine; drives filter + fallback. |
+| `primary_cuisine` | FK -> Cuisine (`PROTECT`, null=True) | Drives the main filter, sort, and the cold-start fallback color/icon. |
+| `cuisine_tags` | M2M -> Cuisine (blank) | Secondary cuisines for broader filtering (fusion trucks). |
 | `description` | TextField | Short bio. |
 | `logo` | ImageField, null | Optional (fallback if absent). |
 | `hero_image` | ImageField, null | Optional. |
@@ -97,7 +109,8 @@ The audit trail for the owner-verification flow (see [owner-verification.md](../
 |---|---|---|
 | `truck` | FK -> Truck (`CASCADE`) | |
 | `method` | CharField(`PERMIT`, `SOCIAL`, `LIVE_PHOTO`, `CALL`) | The signal provided (also records the verification *tier*). |
-| `evidence` | ImageField / TextField | Submitted proof. **Sensitive PII**: store private, access-restricted, retention-limited. |
+| `evidence_image` | ImageField, null | Image proof (permit, coded photo). **Sensitive PII**: private, access-restricted, retention-limited. |
+| `evidence_note` | TextField, blank | Text proof (social handle/URL) or applicant note. |
 | `status` | CharField(`PENDING`, `APPROVED`, `REJECTED`) | |
 | `reason` | CharField(choices: `BLURRY`, `NAME_MISMATCH`, `EXPIRED`, `SOCIAL_UNVERIFIED`, `NEED_MORE_INFO`), blank | Structured rejection / needs-info reason; maps to a friendly owner message (see [owner-communications.md](../features/owner-communications.md)). `notes` stays for free-text detail. |
 | `reviewer` | FK -> User (`SET_NULL`, null) | Staff who decided. |
@@ -121,7 +134,7 @@ A truck at a place over a time window. One row per occurrence (discrete; recurre
 | `status` | CharField(`SCHEDULED`, `CANCELED`) | Lifecycle. "Live now" is *derived*, not stored. |
 | `last_confirmed_at` | datetime, null | Denormalized from the latest owner confirmation (cheap "verified here" reads). |
 
-**Coordinates** come from the geocoding wrapper on save, then the owner confirms the pin. We never geocode on read. **"Live / here now"** is derived: the window contains `now`, elevated to "verified here" when `last_confirmed_at` is recent. Indexes: GiST(`location`), (`truck`, `start_at`), (`start_at`, `end_at`).
+**Coordinates** come from the geocoding wrapper on save, then the owner confirms the pin. We never geocode on read. **"Live / here now"** is derived: the window contains `now`, elevated to "verified here" when `last_confirmed_at` is within `PRESENCE_FRESHNESS_WINDOW` (a settings constant, default 2 hours). Indexes: GiST(`location`), (`truck`, `start_at`), (`start_at`, `end_at`).
 
 ### PresenceConfirmation
 

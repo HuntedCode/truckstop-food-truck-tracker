@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     # Local
     "apps.core",
     "apps.accounts",
+    "apps.trucks",
+    "apps.appearances",
+    "apps.engagement",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -145,3 +149,7 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# An appearance counts as "verified present" if its latest owner confirmation
+# is within this window (see apps.appearances and docs/architecture/data-model.md).
+PRESENCE_FRESHNESS_WINDOW = timedelta(hours=2)
