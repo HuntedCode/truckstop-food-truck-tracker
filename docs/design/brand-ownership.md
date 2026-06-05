@@ -24,10 +24,18 @@ The whole tier is roughly **$15 and ~30 minutes**, and it is the stuff that gets
 | Asset | Action | Rough cost | Notes | Status |
 |---|---|---|---|---|
 | **Brand email** | `hello@curbfeast.com` | Free–$6/mo | Start with free Cloudflare email routing (forwarding) or Google Workspace ($6/user/mo) when you want a real inbox. Make a dedicated brand email the **owner account** for every domain/handle/store login, never a personal account. | ☐ |
-| **Trademark (USPTO)** | File **intent-to-use** for `CURBFEAST` | ~$500–1000 all-in | Details below. You do not need to be live yet to file. | ☐ |
 | **Password vault entry** | Store all credentials | Free | Domain, handles, email, store logins in one vault so the brand assets are recoverable and transferable. | ☐ |
 
-### Trademark detail
+### Trademark — deferred (decision 2026-06-05)
+
+**Decision: wait.** With only an idea and no revenue, the ~$500–1000 for a USPTO filing is premature. Deferring is low-risk because:
+
+- The name does **not** expire while we wait, and **using** "Curbfeast" in commerce builds common-law rights in the meantime.
+- The only real risk is someone else filing first, which is low for a coined word with zero current footprint.
+
+**Revisit when:** there's real traction/revenue, and ideally **before a public launch or any press push** (file the intent-to-use then to lock national priority). See the filing detail below for the how when that time comes.
+
+### Trademark detail (for when we revisit)
 
 - **Mark:** `CURBFEAST` as a **standard character mark** (protects the word itself in any font/color, which is stronger and more flexible than registering a stylized logo).
 - **Filing basis:** **intent-to-use (1b)**. Lets you lock priority now, before launch. You confirm actual use later (a small additional fee/form once the app is live).
@@ -46,13 +54,13 @@ The whole tier is roughly **$15 and ~30 minutes**, and it is the stuff that gets
 |---|---|---|---|
 | **Apple App Store** name | Reserve "Curbfeast" in App Store Connect | Can't reserve far ahead without an app record; do it when the Expo build is ready to submit. | ☐ |
 | **Google Play** name | Reserve in Play Console | Same timing. | ☐ |
-| **Defensive domains** (optional) | `curbfeast.app`, `.co`, `getcurbfeast.com` | Cheap insurance; grab the `.com` first, the rest only if you want belt-and-suspenders. | ☐ |
+| **Defensive domains** | **Deferred (2026-06-05)** | `curbfeast.app`, `.co`, `getcurbfeast.com`. Skipping for now to conserve capital; `.com` alone is enough at this stage. Revisit near launch if the brand gains value worth protecting. | ☐ |
 
 ## Open decisions for us
 
-1. **Fallback handle**: if `@curbfeast` is taken anywhere, do we standardize on `@curbfeastapp` or `@getcurbfeast` everywhere?
-2. **Trademark route**: DIY via USPTO TEAS, a flat-fee service, or a trademark attorney consult first?
-3. **Defensive domains**: worth the extra ~$30/yr, or `.com` only for now?
+1. **Fallback handle**: if `@curbfeast` is taken anywhere, do we standardize on `@getcurbfeast` (recommended) or `@curbfeastapp` everywhere?
+2. ~~Trademark route~~ — **resolved: deferred** until traction/pre-launch (see above).
+3. ~~Defensive domains~~ — **resolved: `.com` only** for now (see Tier 2).
 
 ## Follow-ups outside this repo
 
