@@ -99,6 +99,7 @@ The audit trail for the owner-verification flow (see [owner-verification.md](../
 | `method` | CharField(`PERMIT`, `SOCIAL`, `LIVE_PHOTO`, `CALL`) | The signal provided (also records the verification *tier*). |
 | `evidence` | ImageField / TextField | Submitted proof. **Sensitive PII**: store private, access-restricted, retention-limited. |
 | `status` | CharField(`PENDING`, `APPROVED`, `REJECTED`) | |
+| `reason` | CharField(choices: `BLURRY`, `NAME_MISMATCH`, `EXPIRED`, `SOCIAL_UNVERIFIED`, `NEED_MORE_INFO`), blank | Structured rejection / needs-info reason; maps to a friendly owner message (see [owner-communications.md](../features/owner-communications.md)). `notes` stays for free-text detail. |
 | `reviewer` | FK -> User (`SET_NULL`, null) | Staff who decided. |
 | `notes` | TextField, blank | Reviewer notes / rejection reason. |
 
@@ -143,6 +144,7 @@ On an owner `HERE_NOW` create, update the parent `Appearance.last_confirmed_at`.
 | `customer` | FK -> User (`CASCADE`) | Must be a CUSTOMER account. |
 | `truck` | FK -> Truck (`CASCADE`) | |
 | `created_at` | datetime | |
+| `notifications_muted` | bool, default False | Per-truck mute without unfollowing. |
 
 Constraint: `unique_together(customer, truck)`.
 
@@ -160,6 +162,27 @@ Cheap-now logging that powers later analytics, trust signals, and monetization p
 | `metadata` | JSONField, default dict | Event-specific context (search terms, radius, etc.). |
 
 Indexes: (`truck`, `event_type`, `created_at`), (`created_at`). See Gotchas for the growth/rollup plan.
+
+### NotificationPreference
+
+Per-user global notification settings (per-truck mute lives on `Follow.notifications_muted`).
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | OneToOne -> User (`CASCADE`) | |
+| `push_enabled` | bool, default True | Global push on/off. |
+| `email_marketing_opt_in` | bool, default False | Marketing email opt-in; transactional email always sends. |
+
+### PushToken
+
+A device's Expo push token. Customer push is MVP (see [customer-communications.md](../features/customer-communications.md)).
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK -> User (`CASCADE`) | |
+| `token` | CharField, unique | Expo push token. |
+| `platform` | CharField(`IOS`, `ANDROID`) | |
+| `is_active` | bool, default True | Invalidate on logout/expiry. |
 
 ## Relationships
 
@@ -211,8 +234,6 @@ Each hangs off existing core fields so it is an additive migration, not a rework
 | `SavedLocation` | owner's reusable spots (geocode once, reuse) | `Truck`, `Appearance` |
 | `RecurringSchedule` | template that generates `Appearance` rows | `Appearance` |
 | `Market` / `Region` | geographic dimension for multi-city (per-city liquidity metrics, future partitioning seam) | `Truck`, `Appearance.location` |
-| `PushToken` | (user, token, platform) device tokens for push | `User` |
-| `NotificationPreference` | per-user channel/type toggles | `User` |
 | `Subscription` | (owner, plan, status, Stripe ids) for SaaS billing | `Truck` / `User` |
 
 ## Migration / build order
@@ -225,6 +246,8 @@ Each hangs off existing core fields so it is an additive migration, not a rework
 6. `PresenceConfirmation`.
 7. `Follow`.
 8. `EngagementEvent`.
+9. `NotificationPreference`.
+10. `PushToken`.
 
 ## Gotchas and Pitfalls
 

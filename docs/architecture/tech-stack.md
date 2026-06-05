@@ -73,6 +73,8 @@ Managed PostGIS, git-push deploys, already-familiar from PlatPursuit. Keep the a
 
 Any real map library (MapLibre or Mapbox) has native code, so map screens require an **EAS dev build**, not Expo Go. True regardless of provider; plan for it.
 
+**Push notifications** (Expo Push) are MVP (automated customer follow notifications). They also require an EAS dev build and per-platform setup, and the Expo Push API is wrapped as a resilient client (TokenKeeper pattern), with stale-token invalidation. See [../features/customer-communications.md](../features/customer-communications.md).
+
 ## Gotchas and Pitfalls
 
 - **Custom user model must precede the first migration.** Adding it later is a painful migration. Do it in the backend skeleton step.

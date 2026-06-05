@@ -72,7 +72,7 @@ Fully async and tractable solo at a few signups per day:
 2. You review in **Django admin** (no custom UI for MVP) and approve, reject (with reason), or request escalation.
 3. Approve sets `Truck.verification_status = VERIFIED` and the truck becomes discoverable.
 
-Budget ~10-15 minutes per review. Because unverified trucks are invisible, the queue has no urgency.
+Budget ~10-15 minutes per review. Because unverified trucks are invisible, the queue has no urgency. How decisions are communicated back to the owner (structured reasons + friendly templates) is covered in [owner-communications.md](owner-communications.md).
 
 ## Claim & dispute
 

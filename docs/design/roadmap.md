@@ -23,6 +23,8 @@ The thinnest slice that exercises the full spine *and* the owner/customer role s
 
 **MVP freshness mechanics** (the cheap trust layer): schedule posting, owner **"I'm here now"** single-tap confirm (a verified pin with a timestamp), and follows.
 
+**MVP notifications:** push from day one (Expo) for automated followed-truck events (a truck you follow posted/updated a schedule, or went live), with global + per-truck-mute preferences. This is the free re-engagement loop, distinct from the owner-initiated paid "go live" blast (Phase 1). See [../features/customer-communications.md](../features/customer-communications.md).
+
 ## Phase 1: Owner value layer (the SaaS)
 
 The features owners pay for, built once one local market has liquidity. Each must stay lightweight and be thoroughly UX-tested so it does not clutter the spine.
@@ -34,7 +36,7 @@ The features owners pay for, built once one local market has liquidity. Each mus
 | **Trust rank** | Earned status from showing up accurately over time + verified confirmations. The **primary** public credibility signal. Reward **accuracy, not rigidity** (a truck that moves but is always where it says ranks high). Give new trucks an honest on-ramp. Acts as retention/lock-in. Free. |
 | **Loyalty program** | The headliner. Digital punch card ("buy 5, get 1 free") via **scan-at-window** (customer shows a code, owner taps to award a stamp). No POS integration, no hardware. Owner sets the reward. Paid. |
 | **Analytics dashboard** | Views, follows, check-ins, directions-taps, loyalty redemptions, trust trend. The "proof of value" that justifies the subscription. Built from the engagement events logged since day one. Paid. |
-| **"Go live" follower push** | One tap blasts followers "we're at X now." The most ROI-legible owner action. Paid. |
+| **"Go live" follower push** | One tap blasts followers "we're at X now." The most ROI-legible owner action. **Paid, and distinct from the free automated follow notifications shipped in MVP**: this is the owner-initiated promotional blast. |
 
 ## Phase 2: Stickiness and growth
 
