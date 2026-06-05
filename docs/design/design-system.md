@@ -114,3 +114,4 @@ Intentions, not pixel specs (those come per-screen). Each must honor speed-to-an
 - **Do not let the design depend on photos.** The cold-start fallbacks are load-bearing, not optional polish.
 - **Keep owner surfaces professional.** The gamification/playful energy belongs on the customer side; owner tools stay efficient and calm.
 - **Tokens are the single source of truth.** Web (CSS vars) and React Native (JS theme) mirror the same names. Do not hardcode hex values in components.
+- **Never use `text-base` for font size.** The palette defines a `base` color (cream), so Tailwind generates `text-base` as a *color* utility (cream text), which layers on top of the built-in `text-base` size and renders invisible on white. The 1rem base size is the default, just omit the class or set an explicit size (`text-sm`, `text-lg`, ...). This is the one color name that collides with a size utility.
