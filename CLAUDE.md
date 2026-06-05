@@ -52,6 +52,17 @@ Within TruckStop, follow the global reuse rule: search for existing utilities/pa
 
 The product depends on **mapping/geocoding** (addresses, lat/long, "near me," maps). Wrap any external service (map tiles, geocoding, push notifications) in a resilient client following PlatPursuit's TokenKeeper approach (rate-limit handling, retries, graceful degradation). Treat keys as secrets via env vars; never commit them.
 
+## Testing Standard
+
+**Every code change ships with robust automated tests. Tests are part of the definition of done, not a follow-up.** No feature or branch is complete without them, and this is in addition to (not a replacement for) the audit workflow in the global CLAUDE.md.
+
+- **Backend**: `pytest` + `pytest-django` + `factory_boy`, against a PostGIS-enabled test database. Coverage is gated in CI.
+- **Mobile**: Jest + React Native Testing Library.
+- **Always test the load-bearing boundaries**: the owner/customer/anonymous permission split, the geo "near me" queries, the "live now" derivation, and the geocoding wrapper (external calls mocked, retries/backoff asserted).
+- **CI must pass lint + tests before merge.**
+
+See `docs/guides/testing.md` for the full strategy, tools, and what to test at each layer.
+
 ## Git Commit Scopes
 
 Conventional Commits (`<type>(<scope>): <desc>`). Scopes for this project:
