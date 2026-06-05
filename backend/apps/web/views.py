@@ -1,4 +1,5 @@
 from django.contrib.auth import login
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -11,6 +12,12 @@ class RegisterView(FormView):
     template_name = "web/register.html"
     form_class = OwnerRegistrationForm
     success_url = reverse_lazy("dashboard")
+
+    def dispatch(self, request, *args, **kwargs):
+        # Already signed in? Skip the form and go to the dashboard.
+        if request.user.is_authenticated:
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         user = form.save()

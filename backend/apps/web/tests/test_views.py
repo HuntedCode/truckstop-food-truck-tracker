@@ -53,3 +53,10 @@ def test_owner_sees_dashboard(client):
     resp = client.get(reverse("dashboard"))
     assert resp.status_code == 200
     assert b"Your trucks" in resp.content
+
+
+def test_register_redirects_authenticated_user_to_dashboard(client):
+    client.force_login(OwnerFactory())
+    resp = client.get(reverse("register"))
+    assert resp.status_code == 302
+    assert resp.url == reverse("dashboard")
