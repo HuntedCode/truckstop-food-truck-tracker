@@ -59,18 +59,32 @@
     </script>
   </section>
 
-  <!-- Typography -->
+  <!-- Typography (interactive) -->
   <section>
-    <h2 class="font-display text-xl font-bold mb-4">Typography</h2>
+    <h2 class="font-display text-xl font-bold mb-1">Typography</h2>
+    <p class="text-ink-muted text-sm mb-3">Tap a pairing to preview it live across this page's headings and body. Active: <span id="font-label" class="font-medium text-ink">Poppins / Inter</span></p>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button type="button" onclick="setFonts('Poppins', 'Inter')" class="text-sm bg-white border border-border rounded-lg px-3 py-1.5">Poppins / Inter</button>
+      <button type="button" onclick="setFonts('Fraunces', 'Inter')" class="text-sm bg-white border border-border rounded-lg px-3 py-1.5">Fraunces / Inter</button>
+      <button type="button" onclick="setFonts('Nunito', 'Inter')" class="text-sm bg-white border border-border rounded-lg px-3 py-1.5">Nunito / Inter</button>
+    </div>
     <div class="bg-surface border border-border rounded-2xl p-5 space-y-3">
-      <p class="text-xs text-ink-muted">Headings — Poppins</p>
+      <p class="text-xs text-ink-muted">Headings (display font)</p>
       <p class="font-display text-3xl font-bold">Find your truck</p>
       <p class="font-display text-xl font-semibold">Taco Loco is live now</p>
       <hr class="border-border">
-      <p class="text-xs text-ink-muted">Body — Inter</p>
+      <p class="text-xs text-ink-muted">Body (body font)</p>
       <p class="text-base">The warm, appetizing body copy customers read while tracking down a great meal nearby. Clarity always wins when it conflicts with flavour.</p>
       <p class="text-sm text-ink-muted">Secondary text and captions sit in muted ink.</p>
     </div>
+    <script>
+      function setFonts(display, sans) {
+        const root = document.documentElement.style;
+        root.setProperty('--font-display', display);
+        root.setProperty('--font-sans', sans);
+        document.getElementById('font-label').textContent = display + ' / ' + sans;
+      }
+    </script>
   </section>
 
   <!-- Components -->

@@ -6,7 +6,7 @@
   <title>{% block title %}TruckStop{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&family=Fraunces:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     // Dev: Tailwind Play CDN with the Warm Street-Food tokens. Production
@@ -21,8 +21,8 @@
             'status-here': '#2E7D54', 'status-soon': '#F2A900', 'status-soon-strong': '#8A5300', 'status-away': '#9A8C7D',
           },
           fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-            display: ['Poppins', 'ui-sans-serif', 'sans-serif'],
+            sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            display: ['var(--font-display)', 'ui-sans-serif', 'sans-serif'],
           },
         },
       },
@@ -30,7 +30,10 @@
   </script>
   <script src="https://unpkg.com/htmx.org@2.0.3"></script>
   <style>
-    :root { --color-primary: #E84A27; --color-primary-dark: #C73C1E; }
+    :root {
+      --color-primary: #E84A27; --color-primary-dark: #C73C1E;
+      --font-sans: Inter; --font-display: Poppins;
+    }
     input[type=text], input[type=email], input[type=password], select, textarea {
       width: 100%; border: 1px solid #E7DDD2; border-radius: 0.5rem;
       padding: 0.5rem 0.75rem; background: #fff; color: #2B2118;
