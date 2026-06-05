@@ -9,4 +9,6 @@ urlpatterns = [
     path("api/v1/", include("apps.appearances.urls")),
     path("api/v1/", include("apps.engagement.urls")),
     path("api/v1/", include("apps.notifications.urls")),
+    # Server-rendered web (owner dashboard) at the root.
+    path("", include("apps.web.urls")),
 ]

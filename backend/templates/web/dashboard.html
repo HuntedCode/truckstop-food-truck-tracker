@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · TruckStop{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="font-display text-2xl font-bold">Your trucks</h1>
+</div>
+
+{% if trucks %}
+  <div class="space-y-3">
+    {% for truck in trucks %}
+    <div class="bg-surface border border-border rounded-2xl p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="font-display font-semibold text-lg">{{ truck.name }}</div>
+          <div class="text-sm text-ink-muted">{{ truck.primary_cuisine.name|default:"No cuisine yet" }}</div>
+        </div>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full
+          {% if truck.status == 'ACTIVE' %}bg-status-here/15 text-status-here
+          {% else %}bg-status-away/15 text-ink-muted{% endif %}">
+          {{ truck.get_status_display }}
+        </span>
+      </div>
+      <div class="mt-2 text-sm">
+        {% if truck.verification_status == 'VERIFIED' %}
+          <span class="text-status-here font-medium">★ Verified</span>
+        {% elif truck.verification_status == 'PENDING' %}
+          <span class="text-status-soon font-medium">Verification pending</span>
+        {% else %}
+          <span class="text-ink-muted">Not verified</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="bg-surface border border-border rounded-2xl p-8 text-center">
+    <p class="text-ink-muted mb-4">You haven't added a truck yet.</p>
+    <span class="inline-block bg-primary text-white rounded-lg px-4 py-2 opacity-60 cursor-default">
+      + Create truck (coming soon)
+    </span>
+  </div>
+{% endif %}
+{% endblock %}

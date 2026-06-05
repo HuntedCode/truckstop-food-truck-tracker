@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.appearances",
     "apps.engagement",
     "apps.notifications",
+    "apps.web",
 ]
 
 MIDDLEWARE = [
@@ -98,6 +99,11 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Web (session-auth) login flow for the owner dashboard.
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
