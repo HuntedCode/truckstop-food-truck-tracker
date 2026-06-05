@@ -45,6 +45,24 @@ Scoped to the requesting owner: another owner's objects are simply not found (40
 | GET / PATCH / PUT | `/owner/appearances/{id}/` | Manage an own appearance. Cancel via `status`, not delete; `latitude`/`longitude` must be sent together. |
 | POST | `/owner/appearances/{id}/confirm/` | "I'm here now": records an owner presence confirmation (optional `latitude`/`longitude`) and refreshes the appearance's verified-present state. |
 
-## Coming next (write API, remainder)
+## Customer (CUSTOMER role)
 
-Not yet built: customer follow/unfollow, notification preferences, push-token registration, and engagement-event ingest (the customer-role and anonymous-ingest paths). Added next with tests.
+| Method | Path | Notes |
+|---|---|---|
+| GET / POST | `/follows/` | List own follows / follow a truck (`{ "truck": "<slug>" }`; must be publicly visible). Duplicate follow -> 400. |
+| PATCH | `/follows/{id}/` | Toggle `notifications_muted` for a follow. |
+| DELETE | `/follows/{id}/` | Unfollow. |
+
+## Notifications (any authenticated user)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET / PATCH | `/notification-preference/` | The current user's `push_enabled` / `email_marketing_opt_in` (created on first GET). |
+| GET / POST | `/push-tokens/` | List own device tokens / register one (`token`, `platform`). Re-registering a token upserts it to the current user (200). |
+| DELETE | `/push-tokens/{id}/` | Remove a device token. |
+
+## Engagement ingest
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| POST | `/events/` | Public | Append-only analytics event: `event_type` (required); optional `truck`, `appearance`, `device_id`, `metadata`. `user` is attached when authenticated. |
