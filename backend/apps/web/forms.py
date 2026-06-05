@@ -26,8 +26,14 @@ class OwnerRegistrationForm(forms.Form):
         if p1 and p2 and p1 != p2:
             self.add_error("password2", "Passwords do not match.")
         if p1:
+            # Pass an unsaved instance so UserAttributeSimilarityValidator can
+            # compare against the email/display_name (it is a no-op without it).
+            candidate = User(
+                email=cleaned.get("email") or "",
+                display_name=cleaned.get("display_name") or "",
+            )
             try:
-                validate_password(p1)
+                validate_password(p1, user=candidate)
             except forms.ValidationError as exc:
                 self.add_error("password1", exc)
         return cleaned
@@ -47,3 +53,8 @@ class EmailAuthenticationForm(AuthenticationForm):
     username = UsernameField(
         label="Email", widget=forms.TextInput(attrs={"autofocus": True})
     )
+
+    def clean_username(self):
+        # Emails are stored lowercased at registration; normalize on login too
+        # so casing never locks a user out.
+        return self.cleaned_data["username"].lower()

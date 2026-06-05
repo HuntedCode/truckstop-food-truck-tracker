@@ -143,3 +143,4 @@ Each chunk ships with tests (view auth/permissions, form validation) and is veri
 - **Reuse the models, not the API.** Web views use the ORM/forms directly; business rules live on the models (slug autogen, verification flow, the presence-confirmation denormalization), so the dashboard and API stay consistent.
 - **Tailwind needs a build step.** Dev rebuilds `app.css`; production runs the build before `collectstatic`. Do not hand-edit the compiled CSS.
 - **Map pin = the confirmed coordinate.** The address search seeds a guess; the dragged pin is what we store (`coordinates_confirmed`).
+- **Pre-launch security:** the DRF throttles do not cover the HTML auth forms. Before launch, rate-limit `/accounts/login/` and `/accounts/register/` (brute-force / mass-signup), and vendor the Tailwind + HTMX CDN scripts (or add SRI).
