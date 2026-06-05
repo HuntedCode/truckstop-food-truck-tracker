@@ -2,15 +2,15 @@ services:
   db:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_DB: truckstop
-      POSTGRES_USER: truckstop
-      POSTGRES_PASSWORD: truckstop
+      POSTGRES_DB: curbfeast
+      POSTGRES_USER: curbfeast
+      POSTGRES_PASSWORD: curbfeast
     ports:
       - "5438:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U truckstop"]
+      test: ["CMD-SHELL", "pg_isready -U curbfeast"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -20,7 +20,7 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
-      DATABASE_URL: postgis://truckstop:truckstop@db:5432/truckstop
+      DATABASE_URL: postgis://curbfeast:curbfeast@db:5432/curbfeast
       SECRET_KEY: django-insecure-dev-only-do-not-use-in-prod
       DEBUG: "True"
     volumes:

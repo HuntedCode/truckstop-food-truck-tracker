@@ -1,6 +1,6 @@
 # Design System (Foundations)
 
-> The visual and interaction foundations for TruckStop. Last updated: 2026-06-04. Scope: foundations (principles, tokens, core MVP components). Expanded per-screen as we build.
+> The visual and interaction foundations for Curbfeast. Last updated: 2026-06-04. Scope: foundations (principles, tokens, core MVP components). Expanded per-screen as we build.
 > Palette and type values are a refined starting point, not frozen. See [product-strategy.md](product-strategy.md) for the ethos this implements.
 
 ## Identity in one line

@@ -1,11 +1,11 @@
 # Product Strategy
 
-> Vision and business-model decisions for TruckStop. Last updated: 2026-06-04.
+> Vision and business-model decisions for Curbfeast. Last updated: 2026-06-04.
 > This is a design/vision doc. It records *why* the product is shaped the way it is so future decisions have a reference. When strategy changes, update this doc in the same branch.
 
 ## The Spine
 
-TruckStop's core loop is **location + time**: "which trucks are near me, on which days and times." Every feature and data-model decision is tested against whether it serves that loop. When clarity ("where is my truck right now") conflicts with anything else, the spine wins.
+Curbfeast's core loop is **location + time**: "which trucks are near me, on which days and times." Every feature and data-model decision is tested against whether it serves that loop. When clarity ("where is my truck right now") conflicts with anything else, the spine wins.
 
 ## North Star: Trustworthy Freshness
 
@@ -89,7 +89,7 @@ Recording what we deliberately will not build, and why, so these do not get re-l
 
 ## Design Ethos (the Curbside Standard)
 
-TruckStop should feel **appetizing, local, lively, and trustworthy**. Warm and energetic, never sterile or corporate. Flavor and local charm are welcome, but clarity and "where is my truck right now" always win when they conflict. Customer surfaces prioritize speed-to-answer; owner surfaces prioritize low-friction management (post a schedule in seconds from a phone).
+Curbfeast should feel **appetizing, local, lively, and trustworthy**. Warm and energetic, never sterile or corporate. Flavor and local charm are welcome, but clarity and "where is my truck right now" always win when they conflict. Customer surfaces prioritize speed-to-answer; owner surfaces prioritize low-friction management (post a schedule in seconds from a phone).
 
 ## Gotchas and Pitfalls
 

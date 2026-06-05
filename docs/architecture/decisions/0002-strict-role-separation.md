@@ -5,7 +5,7 @@
 
 ## Context
 
-TruckStop is a two-sided product. An account could be single-role, flexible single-role (a primary role that still allows crossover), or fully dual-role with a mode switch. Clear permissions and avoiding confusion (especially with future multi-person truck access) matter for the foundation.
+Curbfeast is a two-sided product. An account could be single-role, flexible single-role (a primary role that still allows crossover), or fully dual-role with a mode switch. Clear permissions and avoiding confusion (especially with future multi-person truck access) matter for the foundation.
 
 ## Decision
 

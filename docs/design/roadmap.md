@@ -1,6 +1,6 @@
 # Product Roadmap
 
-> Phased feature plan for TruckStop. Last updated: 2026-06-04.
+> Phased feature plan for Curbfeast. Last updated: 2026-06-04.
 > A living document. Phases are approximate and reorderable; the point is to record *every* planned feature (including deferred ones) so nothing is forgotten, and to mark the design constraints each feature must respect. See [product-strategy.md](product-strategy.md) for the why and [../architecture/tech-stack.md](../architecture/tech-stack.md) for the how.
 
 ## Guiding Principle: defer features, but design so they are cheap to add

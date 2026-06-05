@@ -40,7 +40,7 @@ class Command(BaseCommand):
 
     def _ensure_admin(self):
         admin, created = User.objects.get_or_create(
-            email="admin@truckstop.local",
+            email="admin@curbfeast.local",
             defaults={
                 "role": User.Role.OWNER,
                 "is_staff": True,
@@ -63,7 +63,7 @@ class Command(BaseCommand):
 
     def _ensure_owner(self):
         owner, created = User.objects.get_or_create(
-            email="owner@truckstop.local",
+            email="owner@curbfeast.local",
             defaults={"role": User.Role.OWNER, "display_name": "Sample Owner"},
         )
         if created:

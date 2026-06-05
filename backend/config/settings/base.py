@@ -91,7 +91,7 @@ DATABASES = {
     "default": dj_database_url.parse(
         os.getenv(
             "DATABASE_URL",
-            "postgis://truckstop:truckstop@localhost:5438/truckstop",
+            "postgis://curbfeast:curbfeast@localhost:5438/curbfeast",
         ),
         conn_max_age=600,
         conn_health_checks=True,

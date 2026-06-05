@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}TruckStop{% endblock %}</title>
+  <title>{% block title %}Curbfeast{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&family=Fraunces:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@
 <body class="h-full bg-base text-ink font-sans">
   <header class="bg-surface border-b border-border">
     <div class="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
-      <a href="{% url 'home' %}" class="font-display text-xl font-bold tracking-tight text-primary">TruckStop</a>
+      <a href="{% url 'home' %}" class="font-display text-xl font-bold tracking-tight text-primary">Curbfeast</a>
       <nav class="text-sm flex items-center gap-4 text-ink-muted">
         {% if user.is_authenticated %}
           <span>{{ user.display_name|default:user.email }}</span>
