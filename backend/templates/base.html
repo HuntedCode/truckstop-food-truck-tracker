@@ -15,7 +15,7 @@
       theme: {
         extend: {
           colors: {
-            primary: '#E84A27', 'primary-dark': '#C73C1E',
+            primary: 'var(--color-primary)', 'primary-dark': 'var(--color-primary-dark)',
             accent: '#F6A623', base: '#FFF8F0', surface: '#FFFFFF',
             ink: '#2B2118', 'ink-muted': '#6B5D50', border: '#E7DDD2',
             'status-here': '#2E7D54', 'status-soon': '#F2A900', 'status-away': '#9A8C7D',
@@ -30,6 +30,7 @@
   </script>
   <script src="https://unpkg.com/htmx.org@2.0.3"></script>
   <style>
+    :root { --color-primary: #E84A27; --color-primary-dark: #C73C1E; }
     input[type=text], input[type=email], input[type=password], select, textarea {
       width: 100%; border: 1px solid #E7DDD2; border-radius: 0.5rem;
       padding: 0.5rem 0.75rem; background: #fff; color: #2B2118;
