@@ -156,6 +156,8 @@ class TruckVerification(TimeStampedModel):
 
     def reject(self, reason, reviewer=None, notes=""):
         """Reject with a structured reason (maps to a friendly owner message)."""
+        if reason not in self.Reason.values:
+            raise ValueError(f"Invalid rejection reason: {reason!r}")
         self.status = self.Status.REJECTED
         self.reason = reason
         if reviewer is not None:

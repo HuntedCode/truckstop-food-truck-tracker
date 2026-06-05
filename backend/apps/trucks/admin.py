@@ -37,5 +37,8 @@ class TruckVerificationAdmin(admin.ModelAdmin):
 
     @admin.action(description="Approve selected and mark trucks verified")
     def approve_selected(self, request, queryset):
+        count = 0
         for verification in queryset:
             verification.approve(reviewer=request.user)
+            count += 1
+        self.message_user(request, f"Approved {count} verification(s).")

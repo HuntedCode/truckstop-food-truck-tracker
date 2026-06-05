@@ -3,6 +3,7 @@
 Environment-specific settings live in dev.py, test.py, and prod.py and import
 from here. See docs/architecture/tech-stack.md for the rationale.
 """
+
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -21,7 +22,9 @@ def env_bool(name, default=False):
 
 
 def env_list(name, default=""):
-    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+    return [
+        item.strip() for item in os.getenv(name, default).split(",") if item.strip()
+    ]
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -97,7 +100,9 @@ DATABASES = {
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -143,6 +148,10 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# NOTE: media (`default`) is local filesystem, served publicly via /media/.
+# Before collecting real verification evidence (PII), move `default` to a
+# PRIVATE object store with signed URLs so /media/verifications/ is never public.
+# See docs/features/owner-verification.md and cross-cutting-concerns.md.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},

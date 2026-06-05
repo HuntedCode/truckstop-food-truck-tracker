@@ -40,3 +40,17 @@ def test_owner_factory_sets_owner_role():
 def test_str_is_email():
     user = UserFactory(email="who@example.com")
     assert str(user) == "who@example.com"
+
+
+def test_create_superuser_requires_is_staff():
+    with pytest.raises(ValueError):
+        User.objects.create_superuser(
+            email="s@example.com", password="pw-12345!", is_staff=False
+        )
+
+
+def test_create_superuser_requires_is_superuser():
+    with pytest.raises(ValueError):
+        User.objects.create_superuser(
+            email="s2@example.com", password="pw-12345!", is_superuser=False
+        )

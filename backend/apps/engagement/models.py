@@ -7,6 +7,8 @@ from apps.core.models import TimeStampedModel
 class Follow(TimeStampedModel):
     """A customer following a truck (the community graph)."""
 
+    # Should be a CUSTOMER account; enforced at the serializer/permission layer
+    # (not yet built). See docs/architecture/data-model.md.
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="follows"
     )
@@ -17,9 +19,7 @@ class Follow(TimeStampedModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["customer", "truck"], name="unique_follow"
-            )
+            models.UniqueConstraint(fields=["customer", "truck"], name="unique_follow")
         ]
 
     def __str__(self):

@@ -31,3 +31,11 @@ def test_engagement_event_records_anonymous_device_and_metadata():
     )
     assert event.device_id == "device-abc"
     assert event.metadata["q"] == "tacos"
+
+
+def test_engagement_event_with_authenticated_user():
+    user = UserFactory()
+    event = EngagementEventFactory(
+        user=user, event_type=EngagementEvent.EventType.FOLLOW
+    )
+    assert event.user == user

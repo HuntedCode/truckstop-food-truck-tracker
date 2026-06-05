@@ -29,7 +29,11 @@ class AppearanceQuerySet(models.QuerySet):
         )
 
     def nearby(self, point, radius_km):
-        """Appearances within radius_km of point, nearest first."""
+        """Appearances within radius_km of point, nearest first.
+
+        Does NOT apply the public visibility gate. For customer-facing
+        discovery, chain off public(): Appearance.objects.public().nearby(...).
+        """
         from django.contrib.gis.db.models.functions import Distance
         from django.contrib.gis.measure import D
 
@@ -76,8 +80,7 @@ class Appearance(TimeStampedModel):
     def is_live(self, now=None):
         now = now or timezone.now()
         return (
-            self.status == self.Status.SCHEDULED
-            and self.start_at <= now <= self.end_at
+            self.status == self.Status.SCHEDULED and self.start_at <= now <= self.end_at
         )
 
     @property
@@ -85,9 +88,7 @@ class Appearance(TimeStampedModel):
         """True when a recent owner confirmation makes the pin trustworthy."""
         if not self.last_confirmed_at:
             return False
-        window = getattr(
-            settings, "PRESENCE_FRESHNESS_WINDOW", timedelta(hours=2)
-        )
+        window = getattr(settings, "PRESENCE_FRESHNESS_WINDOW", timedelta(hours=2))
         return timezone.now() - self.last_confirmed_at <= window
 
 
@@ -114,9 +115,7 @@ class PresenceConfirmation(TimeStampedModel):
         related_name="confirmations",
     )
     source = models.CharField(max_length=8, choices=Source.choices)
-    kind = models.CharField(
-        max_length=8, choices=Kind.choices, default=Kind.HERE_NOW
-    )
+    kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.HERE_NOW)
     point = gis_models.PointField(geography=True, null=True, blank=True)
 
     class Meta:
@@ -126,10 +125,17 @@ class PresenceConfirmation(TimeStampedModel):
         return f"{self.appearance} {self.kind} ({self.source})"
 
     def save(self, *args, **kwargs):
+        is_new = self._state.adding
         super().save(*args, **kwargs)
-        # Denormalize the latest owner "here now" onto the appearance for cheap
-        # "verified present" reads.
-        if self.source == self.Source.OWNER and self.kind == self.Kind.HERE_NOW:
-            Appearance.objects.filter(pk=self.appearance_id).update(
-                last_confirmed_at=self.created_at
-            )
+        # On creation of an owner "here now", denormalize onto the appearance for
+        # cheap "verified present" reads, but only when this is the latest
+        # confirmation (guards against out-of-order or re-saved rows).
+        if (
+            is_new
+            and self.source == self.Source.OWNER
+            and self.kind == self.Kind.HERE_NOW
+        ):
+            Appearance.objects.filter(pk=self.appearance_id).filter(
+                models.Q(last_confirmed_at__isnull=True)
+                | models.Q(last_confirmed_at__lt=self.created_at)
+            ).update(last_confirmed_at=self.created_at)

@@ -2,6 +2,7 @@
 
 Idempotent: safe to run repeatedly. Local development only.
 """
+
 from datetime import timedelta
 
 from django.contrib.gis.geos import Point
@@ -47,10 +48,17 @@ class Command(BaseCommand):
                 "display_name": "Dev Admin",
             },
         )
-        if created:
-            admin.set_password("admin12345")
-            admin.save()
-            self.stdout.write(self.style.SUCCESS("Created admin user."))
+        # Always (re)set the dev password so the printed credentials are valid on
+        # every run. Dev-only command.
+        admin.is_staff = True
+        admin.is_superuser = True
+        admin.set_password("admin12345")
+        admin.save()
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Created admin user." if created else "Reset admin password."
+            )
+        )
         return admin
 
     def _ensure_owner(self):
