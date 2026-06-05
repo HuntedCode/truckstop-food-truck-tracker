@@ -34,16 +34,16 @@
             <span class="text-ink-muted">Not verified</span>
           {% endif %}
         </span>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
           <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
             {% csrf_token %}
             {% if truck.status == 'ACTIVE' %}
-              <button class="font-medium text-ink-muted hover:text-ink">Pause</button>
+              <button class="font-medium rounded-lg border border-border text-ink-muted px-3 py-1.5 hover:bg-base transition-colors">Pause</button>
             {% else %}
-              <button class="font-medium text-status-here hover:underline">Go live</button>
+              <button class="font-medium rounded-lg border border-status-here/40 text-status-here px-3 py-1.5 hover:bg-status-here/10 transition-colors">Go live</button>
             {% endif %}
           </form>
-          <a href="{% url 'truck-edit' truck.slug %}" class="text-primary underline underline-offset-2">Edit</a>
+          <a href="{% url 'truck-edit' truck.slug %}" class="font-medium rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Edit</a>
         </div>
       </div>
     </div>
