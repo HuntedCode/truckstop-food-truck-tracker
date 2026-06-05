@@ -6,7 +6,7 @@ from django.urls import reverse
 from PIL import Image
 
 from apps.accounts.tests.factories import OwnerFactory, UserFactory
-from apps.trucks.models import Truck
+from apps.trucks.models import Truck, TruckVerification
 from apps.trucks.tests.factories import CuisineFactory, TruckFactory
 
 pytestmark = pytest.mark.django_db
@@ -251,64 +251,74 @@ def test_oversized_image_rejected():
     assert "logo" in form.errors
 
 
-# --- Status toggle (Go live / Pause) ---------------------------------------
+# --- Status toggle (Pause / Resume, verified trucks only) ------------------
 
 
-def test_go_live_activates_draft(client):
+def test_pause_live_truck(client):
     owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.DRAFT)
-    client.force_login(owner)
-    resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
-    assert resp.status_code == 302
-    truck.refresh_from_db()
-    assert truck.status == Truck.Status.ACTIVE
-
-
-def test_pause_active_truck(client):
-    owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.ACTIVE)
+    truck = TruckFactory(owner=owner)  # default ACTIVE + VERIFIED = live
     client.force_login(owner)
     client.post(reverse("truck-status-toggle", args=[truck.slug]))
     truck.refresh_from_db()
     assert truck.status == Truck.Status.PAUSED
 
 
-def test_go_live_reactivates_paused(client):
+def test_resume_paused_truck(client):
     owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.PAUSED)
+    truck = TruckFactory(
+        owner=owner,
+        status=Truck.Status.PAUSED,
+        verification_status=Truck.VerificationStatus.VERIFIED,
+    )
     client.force_login(owner)
     client.post(reverse("truck-status-toggle", args=[truck.slug]))
     truck.refresh_from_db()
     assert truck.status == Truck.Status.ACTIVE
 
 
+def test_toggle_unverified_truck_is_blocked(client):
+    """An unverified truck cannot be flipped live by hand: going live is the
+    result of verification approval, not this toggle."""
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner,
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.UNVERIFIED,
+    )
+    client.force_login(owner)
+    resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    assert resp.status_code == 302  # redirected with an info message
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.DRAFT  # unchanged
+
+
 def test_toggle_requires_post(client):
     owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.DRAFT)
+    truck = TruckFactory(owner=owner)  # live
     client.force_login(owner)
     # GET is rejected (405) so status never changes via a link or prefetch.
     resp = client.get(reverse("truck-status-toggle", args=[truck.slug]))
     assert resp.status_code == 405
     truck.refresh_from_db()
-    assert truck.status == Truck.Status.DRAFT
+    assert truck.status == Truck.Status.ACTIVE
 
 
 def test_toggle_forbidden_for_customer(client):
-    truck = TruckFactory(status=Truck.Status.DRAFT)
+    truck = TruckFactory()
     client.force_login(UserFactory())  # CUSTOMER
     resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
     assert resp.status_code == 403
 
 
 def test_toggle_requires_login(client):
-    truck = TruckFactory(status=Truck.Status.DRAFT)
+    truck = TruckFactory()
     resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
     assert resp.status_code == 302
     assert reverse("login") in resp.url
 
 
 def test_toggle_another_owners_truck_404(client):
-    other_truck = TruckFactory(status=Truck.Status.ACTIVE)
+    other_truck = TruckFactory()  # live
     client.force_login(OwnerFactory())
     resp = client.post(reverse("truck-status-toggle", args=[other_truck.slug]))
     assert resp.status_code == 404
@@ -316,22 +326,157 @@ def test_toggle_another_owners_truck_404(client):
     assert other_truck.status == Truck.Status.ACTIVE  # unchanged
 
 
+# --- Verification submission (chunk 5) -------------------------------------
+
+
+def _setup_truck(owner):
+    """A freshly created truck: draft + unverified (the 'setup' state)."""
+    return TruckFactory(
+        owner=owner,
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.UNVERIFIED,
+    )
+
+
+def test_verify_requires_login(client):
+    truck = _setup_truck(OwnerFactory())
+    resp = client.get(reverse("truck-verify", args=[truck.slug]))
+    assert resp.status_code == 302
+    assert reverse("login") in resp.url
+
+
+def test_verify_forbidden_for_customer(client):
+    truck = _setup_truck(OwnerFactory())
+    client.force_login(UserFactory())
+    assert client.get(reverse("truck-verify", args=[truck.slug])).status_code == 403
+
+
+def test_owner_can_open_verify_form(client):
+    owner = OwnerFactory()
+    truck = _setup_truck(owner)
+    client.force_login(owner)
+    resp = client.get(reverse("truck-verify", args=[truck.slug]))
+    assert resp.status_code == 200
+    assert b"Submit for review" in resp.content
+
+
+def test_owner_submits_verification(client):
+    owner = OwnerFactory()
+    truck = _setup_truck(owner)
+    client.force_login(owner)
+    resp = client.post(
+        reverse("truck-verify", args=[truck.slug]),
+        {"method": TruckVerification.Method.PERMIT, "evidence_note": "permit #12345"},
+    )
+    assert resp.status_code == 302
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.PENDING
+    assert truck.verifications.count() == 1
+
+
+def test_verify_requires_evidence(client):
+    owner = OwnerFactory()
+    truck = _setup_truck(owner)
+    client.force_login(owner)
+    resp = client.post(
+        reverse("truck-verify", args=[truck.slug]),
+        {"method": TruckVerification.Method.PERMIT, "evidence_note": ""},
+    )
+    assert resp.status_code == 200  # error: needs an image or a note
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.UNVERIFIED
+
+
+def test_verify_blocked_when_pending(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner, verification_status=Truck.VerificationStatus.PENDING
+    )
+    client.force_login(owner)
+    resp = client.get(reverse("truck-verify", args=[truck.slug]))
+    assert resp.status_code == 302
+    assert resp.url == reverse("dashboard")
+
+
+def test_verify_blocked_when_verified(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner, verification_status=Truck.VerificationStatus.VERIFIED
+    )
+    client.force_login(owner)
+    resp = client.get(reverse("truck-verify", args=[truck.slug]))
+    assert resp.status_code == 302
+    assert resp.url == reverse("dashboard")
+
+
+def test_verify_allowed_after_rejection(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner,
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.REJECTED,
+    )
+    client.force_login(owner)
+    assert client.get(reverse("truck-verify", args=[truck.slug])).status_code == 200
+    resp = client.post(
+        reverse("truck-verify", args=[truck.slug]),
+        {"method": TruckVerification.Method.PERMIT, "evidence_note": "retry permit"},
+    )
+    assert resp.status_code == 302
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.PENDING
+
+
+def test_verify_another_owners_truck_404(client):
+    other_truck = _setup_truck(OwnerFactory())
+    client.force_login(OwnerFactory())
+    assert (
+        client.get(reverse("truck-verify", args=[other_truck.slug])).status_code == 404
+    )
+
+
 # --- Dashboard rendering ----------------------------------------------------
 
 
-def test_dashboard_shows_not_live_for_draft(client):
+def test_dashboard_shows_setup_truck(client):
     owner = OwnerFactory()
-    TruckFactory(owner=owner, status=Truck.Status.DRAFT)
+    _setup_truck(owner)
     client.force_login(owner)
     content = client.get(reverse("dashboard")).content.decode()
     assert "Not live yet" in content
     assert "Draft" not in content  # the internal label never leaks to the UI
-    assert "Go live" in content  # the explicit publish action is offered
+    assert "Get verified" in content  # the CTA for a setup truck
 
 
-def test_dashboard_shows_pause_for_active(client):
+def test_dashboard_shows_live_truck(client):
     owner = OwnerFactory()
-    TruckFactory(owner=owner, status=Truck.Status.ACTIVE)
+    TruckFactory(owner=owner)  # default ACTIVE + VERIFIED = live
     client.force_login(owner)
     content = client.get(reverse("dashboard")).content.decode()
+    assert "Live" in content
     assert "Pause" in content
+
+
+def test_dashboard_shows_in_review_truck(client):
+    owner = OwnerFactory()
+    TruckFactory(
+        owner=owner,
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.PENDING,
+    )
+    client.force_login(owner)
+    content = client.get(reverse("dashboard")).content.decode()
+    assert "In review" in content
+
+
+def test_dashboard_shows_needs_attention_truck(client):
+    owner = OwnerFactory()
+    TruckFactory(
+        owner=owner,
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.REJECTED,
+    )
+    client.force_login(owner)
+    content = client.get(reverse("dashboard")).content.decode()
+    assert "Needs attention" in content
+    assert "Get verified" in content  # resubmit CTA

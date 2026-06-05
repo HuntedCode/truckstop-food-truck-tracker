@@ -63,3 +63,97 @@ def test_verification_reject_sets_reason_and_status():
     assert truck.verification_status == Truck.VerificationStatus.REJECTED
     assert verification.reason == TruckVerification.Reason.BLURRY
     assert verification.status == TruckVerification.Status.REJECTED
+
+
+# --- Verification submission (model transition shared by API + web) ---------
+
+
+def test_submit_verification_creates_pending_record():
+    truck = TruckFactory(verification_status=Truck.VerificationStatus.UNVERIFIED)
+    verification = truck.submit_verification(
+        method=TruckVerification.Method.PERMIT, evidence_note="permit #1"
+    )
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.PENDING
+    assert verification.status == TruckVerification.Status.PENDING
+    assert truck.verifications.count() == 1
+
+
+def test_submit_verification_blocked_while_pending():
+    truck = TruckFactory(verification_status=Truck.VerificationStatus.PENDING)
+    with pytest.raises(ValueError):
+        truck.submit_verification(
+            method=TruckVerification.Method.PERMIT, evidence_note="x"
+        )
+
+
+def test_submit_verification_blocked_while_verified():
+    truck = TruckFactory(verification_status=Truck.VerificationStatus.VERIFIED)
+    with pytest.raises(ValueError):
+        truck.submit_verification(
+            method=TruckVerification.Method.PERMIT, evidence_note="x"
+        )
+
+
+def test_submit_verification_allowed_after_rejection():
+    truck = TruckFactory(verification_status=Truck.VerificationStatus.REJECTED)
+    truck.submit_verification(
+        method=TruckVerification.Method.PERMIT, evidence_note="retry"
+    )
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.PENDING
+
+
+@pytest.mark.parametrize(
+    "vstatus,expected",
+    [
+        (Truck.VerificationStatus.UNVERIFIED, True),
+        (Truck.VerificationStatus.REJECTED, True),
+        (Truck.VerificationStatus.PENDING, False),
+        (Truck.VerificationStatus.VERIFIED, False),
+    ],
+)
+def test_can_request_verification(vstatus, expected):
+    assert (
+        TruckFactory(verification_status=vstatus).can_request_verification is expected
+    )
+
+
+@pytest.mark.parametrize(
+    "status,vstatus,expected",
+    [
+        (Truck.Status.DRAFT, Truck.VerificationStatus.UNVERIFIED, "setup"),
+        (Truck.Status.DRAFT, Truck.VerificationStatus.PENDING, "in_review"),
+        (Truck.Status.DRAFT, Truck.VerificationStatus.REJECTED, "needs_attention"),
+        (Truck.Status.ACTIVE, Truck.VerificationStatus.VERIFIED, "live"),
+        (Truck.Status.PAUSED, Truck.VerificationStatus.VERIFIED, "paused"),
+    ],
+)
+def test_lifecycle_state(status, vstatus, expected):
+    truck = TruckFactory(status=status, verification_status=vstatus)
+    assert truck.lifecycle_state == expected
+
+
+# --- Approval brings the truck live -----------------------------------------
+
+
+def test_approve_activates_draft_truck():
+    truck = TruckFactory(
+        status=Truck.Status.DRAFT,
+        verification_status=Truck.VerificationStatus.PENDING,
+    )
+    TruckVerificationFactory(truck=truck).approve()
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.ACTIVE
+    assert truck.verification_status == Truck.VerificationStatus.VERIFIED
+
+
+def test_approve_keeps_paused_truck_paused():
+    truck = TruckFactory(
+        status=Truck.Status.PAUSED,
+        verification_status=Truck.VerificationStatus.PENDING,
+    )
+    TruckVerificationFactory(truck=truck).approve()
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.PAUSED  # owner's pause is respected
+    assert truck.verification_status == Truck.VerificationStatus.VERIFIED

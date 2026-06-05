@@ -12,40 +12,56 @@
   <div class="space-y-3">
     {% for truck in trucks %}
     <div class="bg-surface border border-border rounded-2xl p-4">
-      <div class="flex items-center justify-between">
+      {% with state=truck.lifecycle_state %}
+      <div class="flex items-center justify-between gap-3">
         <div>
           <div class="font-display font-semibold text-lg">{{ truck.name }}</div>
           <div class="text-sm text-ink-muted">{{ truck.primary_cuisine.name|default:"No cuisine yet" }}</div>
         </div>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full
-          {% if truck.status == 'ACTIVE' %}bg-status-here/15 text-status-here
-          {% elif truck.status == 'PAUSED' %}bg-status-away/15 text-ink-muted
+        {# One composite "where am I" status; the raw DRAFT label is never shown #}
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap
+          {% if state == 'live' %}bg-status-here/15 text-status-here
+          {% elif state == 'paused' %}bg-status-away/15 text-ink-muted
+          {% elif state == 'needs_attention' %}bg-error/15 text-error
           {% else %}bg-status-soon/15 text-status-soon-strong{% endif %}">
-          {% if truck.status == 'ACTIVE' %}Active{% elif truck.status == 'PAUSED' %}Paused{% else %}Not live yet{% endif %}
+          {% if state == 'live' %}● Live{% elif state == 'paused' %}Paused{% elif state == 'in_review' %}In review{% elif state == 'needs_attention' %}Needs attention{% else %}Not live yet{% endif %}
         </span>
       </div>
-      <div class="mt-2 flex items-center justify-between text-sm">
-        <span>
-          {% if truck.verification_status == 'VERIFIED' %}
-            <span class="text-status-here font-medium">★ Verified</span>
-          {% elif truck.verification_status == 'PENDING' %}
-            <span class="text-status-soon-strong font-medium">Verification pending</span>
-          {% else %}
-            <span class="text-ink-muted">Not verified</span>
-          {% endif %}
-        </span>
-        <div class="flex items-center gap-2">
+
+      {# Guided path to discoverable, shown until the truck is live or paused #}
+      {% if state == 'setup' or state == 'in_review' or state == 'needs_attention' %}
+        <ol class="mt-3 space-y-1 text-sm text-ink-muted">
+          <li><span class="text-status-here">✓</span> Truck created</li>
+          <li>
+            {% if state == 'in_review' %}
+              <span class="text-status-soon-strong">◐</span> Verification in review
+            {% elif state == 'needs_attention' %}
+              <span class="text-error">✗</span> Verification needs another look
+            {% else %}
+              <span>○</span> Get verified to go live
+            {% endif %}
+          </li>
+          <li><span>○</span> Live for customers</li>
+        </ol>
+      {% endif %}
+
+      <div class="mt-3 flex items-center justify-end gap-2">
+        {% if state == 'setup' or state == 'needs_attention' %}
+          <a href="{% url 'truck-verify' truck.slug %}" class="font-medium text-sm rounded-lg bg-primary hover:bg-primary-dark text-white px-3 py-1.5 transition-colors">Get verified</a>
+        {% elif state == 'live' %}
           <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
             {% csrf_token %}
-            {% if truck.status == 'ACTIVE' %}
-              <button class="font-medium rounded-lg border border-border text-ink-muted px-3 py-1.5 hover:bg-base transition-colors">Pause</button>
-            {% else %}
-              <button class="font-medium rounded-lg border border-status-here/40 text-status-here px-3 py-1.5 hover:bg-status-here/10 transition-colors">Go live</button>
-            {% endif %}
+            <button class="font-medium text-sm rounded-lg border border-border text-ink-muted px-3 py-1.5 hover:bg-base transition-colors">Pause</button>
           </form>
-          <a href="{% url 'truck-edit' truck.slug %}" class="font-medium rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Edit</a>
-        </div>
+        {% elif state == 'paused' %}
+          <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
+            {% csrf_token %}
+            <button class="font-medium text-sm rounded-lg border border-status-here/40 text-status-here px-3 py-1.5 hover:bg-status-here/10 transition-colors">Resume</button>
+          </form>
+        {% endif %}
+        <a href="{% url 'truck-edit' truck.slug %}" class="font-medium text-sm rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Edit</a>
       </div>
+      {% endwith %}
     </div>
     {% endfor %}
   </div>

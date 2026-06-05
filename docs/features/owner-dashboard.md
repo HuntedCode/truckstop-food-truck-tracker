@@ -136,11 +136,11 @@ Reuses [design-system](../design/design-system.md) patterns: the **status pill**
 
 ## Build sequence
 
-1. Frontend infrastructure: base template, Tailwind (token theme) build in Docker, HTMX vendored, `OwnerRequiredMixin`, flash messages.
-2. Auth: register (owner) / login / logout.
-3. Dashboard home + create/edit truck.
-4. Appearances: post/edit + the "I'm here now" HTMX confirm.
-5. Verification submission.
+1. Frontend infrastructure: base template, Tailwind (token theme) build in Docker, HTMX vendored, `OwnerRequiredMixin`, flash messages. **(done)**
+2. Auth: register (owner) / login / logout. **(done)**
+3. Dashboard home + create/edit truck. **(done)**
+4. Verification submission + the activation pipeline. **(done)** The owner path is sign-up -> verified -> live. A truck's composite `lifecycle_state` (setup / in_review / needs_attention / live / paused) drives a single dashboard status and an activation checklist, so the raw `DRAFT` is never shown. **Going live is the result of verification approval** (`TruckVerification.approve()` activates a draft truck), not a separate owner step. Pause/Resume is the only manual status toggle, available once verified.
+5. Appearances: post/edit + the "I'm here now" HTMX confirm. **(next)**
 
 Each chunk ships with tests (view auth/permissions, form validation) and is verified by running the app.
 

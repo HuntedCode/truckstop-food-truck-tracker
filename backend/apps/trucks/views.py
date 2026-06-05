@@ -68,17 +68,19 @@ class OwnerTruckViewSet(viewsets.ModelViewSet):
         self-demotion). Resubmission is allowed from UNVERIFIED or REJECTED.
         """
         truck = self.get_object()
-        if truck.verification_status in (
-            Truck.VerificationStatus.PENDING,
-            Truck.VerificationStatus.VERIFIED,
-        ):
+        if not truck.can_request_verification:
             return Response(
                 {"detail": "Verification is already pending or approved."},
                 status=status.HTTP_409_CONFLICT,
             )
         serializer = VerificationSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(truck=truck)
-        truck.verification_status = Truck.VerificationStatus.PENDING
-        truck.save(update_fields=["verification_status", "updated_at"])
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        verification = truck.submit_verification(
+            method=serializer.validated_data["method"],
+            evidence_image=serializer.validated_data.get("evidence_image"),
+            evidence_note=serializer.validated_data.get("evidence_note", ""),
+        )
+        return Response(
+            VerificationSubmitSerializer(verification).data,
+            status=status.HTTP_201_CREATED,
+        )

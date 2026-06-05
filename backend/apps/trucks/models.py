@@ -75,6 +75,11 @@ class Truck(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = self._unique_slug()
+            # If this is a partial save, ensure the freshly generated slug is
+            # actually persisted rather than silently dropped.
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None and "slug" not in update_fields:
+                kwargs["update_fields"] = list(update_fields) + ["slug"]
         super().save(*args, **kwargs)
 
     def _unique_slug(self):
@@ -93,6 +98,46 @@ class Truck(TimeStampedModel):
             self.status == self.Status.ACTIVE
             and self.verification_status == self.VerificationStatus.VERIFIED
         )
+
+    @property
+    def can_request_verification(self):
+        """Owners may (re)submit only from an unverified or rejected state,
+        never while pending or already verified (no queue spam, no self-demotion)."""
+        return self.verification_status in (
+            self.VerificationStatus.UNVERIFIED,
+            self.VerificationStatus.REJECTED,
+        )
+
+    def submit_verification(self, method, evidence_image=None, evidence_note=""):
+        """Create a pending verification submission and move the truck into
+        review. Single source of truth for the transition, shared by the API
+        and the web dashboard. Raises ValueError if not currently allowed."""
+        if not self.can_request_verification:
+            raise ValueError("Verification is already pending or approved.")
+        verification = self.verifications.create(
+            method=method,
+            evidence_image=evidence_image or None,
+            evidence_note=evidence_note,
+        )
+        self.verification_status = self.VerificationStatus.PENDING
+        self.save(update_fields=["verification_status", "updated_at"])
+        return verification
+
+    @property
+    def lifecycle_state(self):
+        """Owner-facing composite of status + verification for the dashboard.
+        Returns one of: setup, in_review, needs_attention, live, paused.
+
+        This is what drives the activation checklist and the single 'where am I'
+        status; the raw DRAFT status is never shown to owners."""
+        v = self.verification_status
+        if v == self.VerificationStatus.PENDING:
+            return "in_review"
+        if v == self.VerificationStatus.REJECTED:
+            return "needs_attention"
+        if v == self.VerificationStatus.VERIFIED:
+            return "live" if self.status == self.Status.ACTIVE else "paused"
+        return "setup"  # UNVERIFIED
 
 
 class TruckVerification(TimeStampedModel):
@@ -145,14 +190,23 @@ class TruckVerification(TimeStampedModel):
         return f"{self.truck} verification ({self.status})"
 
     def approve(self, reviewer=None):
-        """Approve this submission and mark the truck verified."""
+        """Approve this submission, mark the truck verified, and bring it live.
+
+        A brand-new (DRAFT) truck goes ACTIVE so that approval is what makes it
+        discoverable: going live is the result of verification, not a separate
+        owner step. A truck the owner deliberately PAUSED stays paused."""
         self.status = self.Status.APPROVED
         self.reason = ""
         if reviewer is not None:
             self.reviewer = reviewer
         self.save()
-        self.truck.verification_status = Truck.VerificationStatus.VERIFIED
-        self.truck.save(update_fields=["verification_status", "updated_at"])
+        truck = self.truck
+        truck.verification_status = Truck.VerificationStatus.VERIFIED
+        fields = ["verification_status", "updated_at"]
+        if truck.status == Truck.Status.DRAFT:
+            truck.status = Truck.Status.ACTIVE
+            fields.append("status")
+        truck.save(update_fields=fields)
 
     def reject(self, reason, reviewer=None, notes=""):
         """Reject with a structured reason (maps to a friendly owner message)."""

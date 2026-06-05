@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 
 from apps.accounts.models import User
 from apps.core.validators import validate_image_size
-from apps.trucks.models import Cuisine, Truck
+from apps.trucks.models import Cuisine, Truck, TruckVerification
 
 
 class OwnerRegistrationForm(forms.Form):
@@ -99,3 +99,24 @@ class TruckForm(forms.ModelForm):
         active = Cuisine.objects.filter(is_active=True)
         self.fields["primary_cuisine"].queryset = active
         self.fields["cuisine_tags"].queryset = active
+
+
+class TruckVerificationForm(forms.ModelForm):
+    """Owner submits evidence to verify a truck. Mirrors the API's
+    VerificationSubmitSerializer: provide one of an evidence image or a note.
+    The view hands the cleaned data to Truck.submit_verification (the single
+    source of truth for the state transition), so this form only validates."""
+
+    evidence_image = forms.ImageField(required=False, validators=[validate_image_size])
+
+    class Meta:
+        model = TruckVerification
+        fields = ["method", "evidence_image", "evidence_note"]
+        widgets = {"evidence_note": forms.Textarea(attrs={"rows": 3})}
+
+    def clean(self):
+        cleaned = super().clean()
+        note = (cleaned.get("evidence_note") or "").strip()
+        if not cleaned.get("evidence_image") and not note:
+            raise forms.ValidationError("Provide an evidence image or a note.")
+        return cleaned

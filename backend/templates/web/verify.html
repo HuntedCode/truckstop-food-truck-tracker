@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Verify {{ truck.name }} · Curbfeast{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto">
+  <a href="{% url 'dashboard' %}" class="text-sm text-ink-muted hover:text-ink">&larr; Back to dashboard</a>
+  <h1 class="font-display text-2xl font-bold mb-1 mt-3">Verify {{ truck.name }}</h1>
+  <p class="text-ink-muted mb-6">
+    Verification earns the ★ badge and is what makes your truck discoverable to
+    customers. Pick one method and add proof: a permit or business license, a
+    social account, or a photo of your truck. We will review it and bring you live.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+    {% include "web/_form_fields.html" %}
+    <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg py-2.5 transition-colors">
+      Submit for review
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from apps.trucks.models import Truck
 
-from .forms import OwnerRegistrationForm, TruckForm
+from .forms import OwnerRegistrationForm, TruckForm, TruckVerificationForm
 from .mixins import OwnerRequiredMixin
 
 
@@ -82,14 +82,56 @@ class TruckUpdateView(OwnerRequiredMixin, UpdateView):
         return ctx
 
 
+class TruckVerifyView(OwnerRequiredMixin, FormView):
+    """Owner submits verification evidence for one of their trucks. Going live
+    is the result of approval, so this is the owner's path to being discoverable.
+    Submission is blocked while already pending or verified."""
+
+    template_name = "web/verify.html"
+    form_class = TruckVerificationForm
+    success_url = reverse_lazy("dashboard")
+
+    def dispatch(self, request, *args, **kwargs):
+        # OwnerRequiredMixin gates auth/role; only then resolve the truck (owner
+        # scoped, so another owner's slug 404s) and guard the submission state.
+        if request.user.is_authenticated and request.user.is_owner:
+            self.truck = get_object_or_404(request.user.trucks, slug=kwargs["slug"])
+            if not self.truck.can_request_verification:
+                messages.info(
+                    request, f'"{self.truck.name}" is already in review or verified.'
+                )
+                return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        self.truck.submit_verification(
+            method=form.cleaned_data["method"],
+            evidence_image=form.cleaned_data.get("evidence_image"),
+            evidence_note=form.cleaned_data.get("evidence_note", ""),
+        )
+        messages.success(
+            self.request,
+            f'"{self.truck.name}" submitted for verification. We will review it soon.',
+        )
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["truck"] = self.truck
+        return ctx
+
+
 class TruckStatusToggleView(OwnerRequiredMixin, View):
-    """Deliberate live/not-live toggle, separate from editing details. Active
-    flips to Paused; Draft or Paused flips to Active (a truck never returns to
-    the internal Draft state). POST-only so it is never triggered by a link."""
+    """Pause / resume a *verified* truck (ACTIVE <-> PAUSED). Going live for the
+    first time happens via verification approval, not here, so this never
+    activates an unverified truck. POST-only, so a link can never trigger it."""
 
     def post(self, request, slug):
         # Owner-scoped: another owner's slug 404s, never 403.
         truck = get_object_or_404(request.user.trucks, slug=slug)
+        if truck.verification_status != Truck.VerificationStatus.VERIFIED:
+            messages.info(request, f'"{truck.name}" goes live once it is verified.')
+            return redirect("dashboard")
         if truck.status == Truck.Status.ACTIVE:
             truck.status = Truck.Status.PAUSED
             message = f'"{truck.name}" is now paused and hidden from customers.'
