@@ -18,6 +18,7 @@ System documentation for TruckStop. Per the project standard, when a system's be
 |-----|----------------|
 | [design/product-strategy.md](design/product-strategy.md) | North star (trustworthy freshness), positioning (the owner value platform), market analysis, and the monetization model. |
 | [design/roadmap.md](design/roadmap.md) | Phased feature plan: MVP scope and build order, the owner-value SaaS layer, and deferred-but-designed-for features. |
+| [design/design-system.md](design/design-system.md) | Visual foundations: design principles, the Warm Street-Food palette and type as named tokens, spacing, the cold-start imagery rule, customer-vs-owner tone, and core MVP component patterns. |
 | [architecture/tech-stack.md](architecture/tech-stack.md) | Locked technical decisions: PostGIS/GeoDjango, MapLibre + geocoding wrapper, Render hosting, role split, and the cost model. |
 
 _Next docs to write (during the MVP build): `architecture/data-model.md`, `reference/api-endpoints.md`, `guides/local-dev.md`._
