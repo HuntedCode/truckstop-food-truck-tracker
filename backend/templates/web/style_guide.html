@@ -28,6 +28,29 @@
     {% endfor %}
   </section>
 
+  <!-- Primary hue options -->
+  <section>
+    <h2 class="font-display text-xl font-bold mb-1">Primary hue options</h2>
+    <p class="text-ink-muted text-sm mb-3">Same tomato role, brighter vs deeper. A deeper hue reads less "canned".</p>
+    <div class="grid grid-cols-3 gap-3 max-w-md">
+      <div class="text-center">
+        <div class="h-16 rounded-xl border border-border" style="background: #E84A27;"></div>
+        <div class="text-xs mt-1 font-mono">#E84A27</div>
+        <div class="text-xs text-ink-muted">Current (bright)</div>
+      </div>
+      <div class="text-center">
+        <div class="h-16 rounded-xl border border-border" style="background: #D2401F;"></div>
+        <div class="text-xs mt-1 font-mono">#D2401F</div>
+        <div class="text-xs text-ink-muted">Slightly deeper</div>
+      </div>
+      <div class="text-center">
+        <div class="h-16 rounded-xl border border-border" style="background: #B23A20;"></div>
+        <div class="text-xs mt-1 font-mono">#B23A20</div>
+        <div class="text-xs text-ink-muted">Brick</div>
+      </div>
+    </div>
+  </section>
+
   <!-- Typography -->
   <section>
     <h2 class="font-display text-xl font-bold mb-4">Typography</h2>
@@ -77,6 +100,57 @@
             </div>
             <div class="text-sm text-ink-muted mt-0.5">Tacos · ★ Verified · 0.3 mi</div>
             <button class="mt-3 w-full bg-accent text-ink font-medium rounded-lg py-2">I'm here now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Two tempos -->
+  <section>
+    <h2 class="font-display text-xl font-bold mb-1">Two tempos</h2>
+    <p class="text-ink-muted text-sm mb-4">Same palette, dialed differently per audience.</p>
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <!-- Owner / professional -->
+      <div class="border border-border rounded-2xl overflow-hidden">
+        <div class="px-4 py-2 bg-surface border-b border-border flex items-center justify-between">
+          <span class="font-display font-bold text-primary">TruckStop</span>
+          <span class="text-xs text-ink-muted">owner · professional</span>
+        </div>
+        <div class="p-4 bg-base">
+          <div class="bg-surface border border-border rounded-xl p-4">
+            <div class="flex items-center justify-between">
+              <div class="font-medium">Taco Loco</div>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-status-here/15 text-status-here">Active</span>
+            </div>
+            <div class="text-sm text-ink-muted mt-0.5">Tacos · ★ Verified</div>
+            <div class="mt-3 flex gap-2">
+              <button class="text-sm bg-primary text-white rounded-lg px-3 py-1.5">Post appearance</button>
+              <button class="text-sm bg-white border border-border rounded-lg px-3 py-1.5">Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer / warm -->
+      <div class="border border-border rounded-2xl overflow-hidden">
+        <div class="px-4 py-2 bg-primary text-white flex items-center justify-between">
+          <span class="font-display font-bold">TruckStop</span>
+          <span class="text-xs opacity-90">customer · warm</span>
+        </div>
+        <div class="p-4 bg-base">
+          <div class="bg-surface border border-border rounded-2xl overflow-hidden">
+            <div class="h-24 flex items-center justify-center text-white text-3xl" style="background: #E84A27;">🌮</div>
+            <div class="p-4">
+              <div class="flex items-center justify-between">
+                <div class="font-display font-semibold">Taco Loco</div>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-status-here/15 text-status-here font-medium">● Here now</span>
+              </div>
+              <div class="text-sm text-ink-muted mt-0.5">Tacos · 0.3 mi · ★ Verified</div>
+              <button class="mt-3 w-full bg-accent text-ink font-medium rounded-lg py-2">Follow</button>
+            </div>
           </div>
         </div>
       </div>
