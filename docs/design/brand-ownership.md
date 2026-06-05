@@ -3,7 +3,7 @@
 > How we secure the name "Curbfeast" in the places that matter. Created 2026-06-05.
 > Status legend: ☐ to do · ◐ in progress · ☑ done. Update as we claim each asset.
 
-The name cleared a full sweep before we locked it: **0 USPTO trademark hits**, `curbfeast.com` unregistered, no existing brand/app/business named Curbfeast, and the social handles appear open. The job now is to claim those assets before anyone else notices the name is good. Squatters move fastest right after a name is "decided," so the cheap, time-sensitive items come first.
+The name cleared a full sweep before we locked it: **0 USPTO trademark hits**, `curbfeast.com` unregistered, no existing brand/app/business named Curbfeast, and the social handles open. **As of 2026-06-05 the core assets are claimed:** `curbfeast.com` is registered (Cloudflare, at cost) and `@curbfeast` is secured on Instagram, TikTok, X, and Facebook, no fallback handle needed.
 
 ## Tier 0 — This week (cheap, time-sensitive)
 
@@ -11,11 +11,11 @@ The whole tier is roughly **$15 and ~30 minutes**, and it is the stuff that gets
 
 | Asset | Action | Notes | Status |
 |---|---|---|---|
-| **curbfeast.com** | Register now | Use an at-cost registrar (Cloudflare Registrar or Porkbun, ~$10-15/yr). Avoid registrars that upsell. This is the one that matters most. | ☐ |
-| **Instagram** `@curbfeast` | Reserve | The primary channel for a food brand (visual). Claim the handle, set a logo + one-line bio, even if dormant. | ☐ |
-| **TikTok** `@curbfeast` | Reserve | Same handle for consistency. | ☐ |
-| **X / Twitter** `@curbfeast` | Reserve | Same handle. | ☐ |
-| **Facebook** `/curbfeast` Page | Reserve | Needed later for Page-based features/ads. | ☐ |
+| **curbfeast.com** | Registered (Cloudflare, at cost) | Secured 2026-06-05. | ☑ |
+| **Instagram** `@curbfeast` | Claimed | Add logo + one-line bio once the logo lands. | ☑ |
+| **TikTok** `@curbfeast` | Claimed | Same. | ☑ |
+| **X / Twitter** `@curbfeast` | Claimed | Same. | ☑ |
+| **Facebook** `/curbfeast` Page | Claimed | Page created (categories: Mobile App + Internet Company + a food tag). | ☑ |
 
 **Tip:** check all handles at once with a name-availability tool (e.g. namecheckr.com) so you grab a single consistent handle everywhere. If `@curbfeast` is taken on one platform, decide now on a consistent fallback (`@curbfeastapp`, `@getcurbfeast`) and use it across all of them.
 
@@ -58,7 +58,7 @@ The whole tier is roughly **$15 and ~30 minutes**, and it is the stuff that gets
 
 ## Open decisions for us
 
-1. **Fallback handle**: if `@curbfeast` is taken anywhere, do we standardize on `@getcurbfeast` (recommended) or `@curbfeastapp` everywhere?
+1. ~~Fallback handle~~ — **moot: `@curbfeast` secured on all four platforms.**
 2. ~~Trademark route~~ — **resolved: deferred** until traction/pre-launch (see above).
 3. ~~Defensive domains~~ — **resolved: `.com` only** for now (see Tier 2).
 
