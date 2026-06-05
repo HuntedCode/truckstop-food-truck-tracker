@@ -17,6 +17,12 @@
 - **Freshness nudges** ("you have not posted this week"), which also serve the freshness north star.
 - (Multi-truck / fleet view is already phased in the roadmap, not here.)
 
+## Verification & onboarding UX (polish pass)
+> Deferred *presentation* polish for the already-built verification feature; the functional flow works (submit -> review -> approve -> live). This is design-pass work, not net-new scope. See [../features/owner-verification.md](../features/owner-verification.md).
+- **Tiered, guided method selection** instead of today's flat dropdown: lead with the low-friction **Tier 1** options (vendor permit / business license, or social-account ownership challenge), present the **coded live photo** as a clearly-labeled **Tier 2 fallback**, and do **not** surface the **phone/video call** to owners at all (Tier 3 is a reviewer-initiated escalation). Concretely: drop `CALL` from the owner-facing choices.
+- **Step-by-step flow** (short wizard / progressive disclosure with per-method instructions and examples) rather than a single raw form, so owners know exactly what to submit for their chosen method.
+- **Status-aware guidance** on the dashboard: clearer "what happens next" copy for the in-review and needs-attention states, including the structured rejection reason and how to fix it (ties into [../features/owner-communications.md](../features/owner-communications.md)).
+
 ## Notifications (beyond the Phase 1 go-live push)
 - **Geofenced "a truck you follow is nearby" alerts** (pairs with live tracking).
 
