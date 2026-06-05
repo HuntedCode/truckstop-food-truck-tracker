@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from apps.core.validators import validate_image_size
+
 from .models import Cuisine, Truck, TruckVerification
 
 
@@ -42,6 +44,13 @@ class TruckWriteSerializer(serializers.ModelSerializer):
     """Owner-facing create/update serializer. owner is set from the request;
     slug and verification_status are managed server-side."""
 
+    logo = serializers.ImageField(
+        required=False, allow_null=True, validators=[validate_image_size]
+    )
+    hero_image = serializers.ImageField(
+        required=False, allow_null=True, validators=[validate_image_size]
+    )
+
     class Meta:
         model = Truck
         fields = [
@@ -67,6 +76,10 @@ class TruckWriteSerializer(serializers.ModelSerializer):
 class VerificationSubmitSerializer(serializers.ModelSerializer):
     """An owner submits evidence for review (status starts PENDING)."""
 
+    evidence_image = serializers.ImageField(
+        required=False, allow_null=True, validators=[validate_image_size]
+    )
+
     class Meta:
         model = TruckVerification
         fields = [
@@ -78,3 +91,11 @@ class VerificationSubmitSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "status", "created_at"]
+
+    def validate(self, attrs):
+        if (
+            not attrs.get("evidence_image")
+            and not (attrs.get("evidence_note") or "").strip()
+        ):
+            raise serializers.ValidationError("Provide an evidence image or note.")
+        return attrs

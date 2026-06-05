@@ -39,10 +39,10 @@ Scoped to the requesting owner: another owner's objects are simply not found (40
 | Method | Path | Notes |
 |---|---|---|
 | GET / POST | `/owner/trucks/` | List own trucks (including drafts) / create one (owner set from the request, slug auto-generated). |
-| GET / PATCH / PUT / DELETE | `/owner/trucks/{slug}/` | Manage an own truck. `verification_status` is read-only. |
-| POST | `/owner/trucks/{slug}/request_verification/` | Submit evidence (`method`, `evidence_image`/`evidence_note`); moves the truck to PENDING review. |
-| GET / POST | `/owner/appearances/` | List own appearances / post one (`truck` slug, `latitude`, `longitude`, `address`, `start_at`, `end_at`). |
-| GET / PATCH / PUT / DELETE | `/owner/appearances/{id}/` | Manage an own appearance. |
+| GET / PATCH / PUT | `/owner/trucks/{slug}/` | Manage an own truck. `verification_status` is read-only; hard delete is disabled (pause via `status`). |
+| POST | `/owner/trucks/{slug}/request_verification/` | Submit evidence: `method` plus an `evidence_image` or `evidence_note`. Moves the truck to PENDING. Rejected (409) if already pending or verified. |
+| GET / POST | `/owner/appearances/` | List own appearances / post one (`truck` slug, `latitude` + `longitude` as a pair, `address`, `start_at`, `end_at`). |
+| GET / PATCH / PUT | `/owner/appearances/{id}/` | Manage an own appearance. Cancel via `status`, not delete; `latitude`/`longitude` must be sent together. |
 | POST | `/owner/appearances/{id}/confirm/` | "I'm here now": records an owner presence confirmation (optional `latitude`/`longitude`) and refreshes the appearance's verified-present state. |
 
 ## Coming next (write API, remainder)

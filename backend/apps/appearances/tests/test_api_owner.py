@@ -89,3 +89,77 @@ def test_owner_cannot_confirm_another_owners_appearance():
     client.force_authenticate(user=OwnerFactory())
     resp = client.post(f"{URL}{appearance.id}/confirm/", {}, format="json")
     assert resp.status_code == 404
+
+
+def test_anonymous_and_customer_cannot_confirm():
+    appearance = AppearanceFactory()
+    assert (
+        APIClient()
+        .post(f"{URL}{appearance.id}/confirm/", {}, format="json")
+        .status_code
+        == 401
+    )
+    client = APIClient()
+    client.force_authenticate(user=UserFactory())
+    assert (
+        client.post(f"{URL}{appearance.id}/confirm/", {}, format="json").status_code
+        == 403
+    )
+
+
+def test_owner_can_patch_appearance():
+    owner = OwnerFactory()
+    appearance = AppearanceFactory(truck=TruckFactory(owner=owner))
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.patch(
+        f"{URL}{appearance.id}/", {"location_name": "Moved"}, format="json"
+    )
+    assert resp.status_code == 200
+    appearance.refresh_from_db()
+    assert appearance.location_name == "Moved"
+
+
+def test_partial_update_with_single_coordinate_is_rejected():
+    owner = OwnerFactory()
+    appearance = AppearanceFactory(truck=TruckFactory(owner=owner))
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.patch(f"{URL}{appearance.id}/", {"latitude": 30.5}, format="json")
+    assert resp.status_code == 400
+
+
+def test_patch_start_past_existing_end_is_rejected():
+    owner = OwnerFactory()
+    appearance = AppearanceFactory(
+        truck=TruckFactory(owner=owner),
+        start_at=timezone.now() + timedelta(hours=1),
+        end_at=timezone.now() + timedelta(hours=2),
+    )
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.patch(
+        f"{URL}{appearance.id}/",
+        {"start_at": (timezone.now() + timedelta(hours=3)).isoformat()},
+        format="json",
+    )
+    assert resp.status_code == 400
+
+
+def test_confirm_on_canceled_appearance_is_rejected():
+    owner = OwnerFactory()
+    appearance = AppearanceFactory(
+        truck=TruckFactory(owner=owner), status=Appearance.Status.CANCELED
+    )
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.post(f"{URL}{appearance.id}/confirm/", {}, format="json")
+    assert resp.status_code == 400
+
+
+def test_appearance_hard_delete_is_disabled():
+    owner = OwnerFactory()
+    appearance = AppearanceFactory(truck=TruckFactory(owner=owner))
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    assert client.delete(f"{URL}{appearance.id}/").status_code == 405

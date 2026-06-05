@@ -1,6 +1,6 @@
-from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
+from apps.core.geo import point_from_latlng
 from apps.trucks.models import Truck
 from apps.trucks.serializers import TruckSerializer
 
@@ -89,17 +89,23 @@ class AppearanceWriteSerializer(serializers.ModelSerializer):
         return truck
 
     def validate(self, attrs):
-        start = attrs.get("start_at") or getattr(self.instance, "start_at", None)
-        end = attrs.get("end_at") or getattr(self.instance, "end_at", None)
+        if ("latitude" in attrs) != ("longitude" in attrs):
+            raise serializers.ValidationError(
+                "latitude and longitude must be provided together."
+            )
+        start = attrs.get("start_at", getattr(self.instance, "start_at", None))
+        end = attrs.get("end_at", getattr(self.instance, "end_at", None))
         if start and end and end <= start:
             raise serializers.ValidationError("end_at must be after start_at.")
         return attrs
 
     def _build_point(self, validated_data):
-        lat = validated_data.pop("latitude", None)
-        lng = validated_data.pop("longitude", None)
-        if lat is not None and lng is not None:
-            validated_data["location"] = Point(lng, lat, srid=4326)
+        point = point_from_latlng(
+            validated_data.pop("latitude", None),
+            validated_data.pop("longitude", None),
+        )
+        if point is not None:
+            validated_data["location"] = point
         return validated_data
 
     def create(self, validated_data):

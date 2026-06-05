@@ -103,3 +103,77 @@ def test_owner_request_verification_creates_pending():
     assert TruckVerification.objects.filter(
         truck=truck, status=TruckVerification.Status.PENDING
     ).exists()
+
+
+def test_request_verification_requires_evidence():
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner, verification_status=Truck.VerificationStatus.UNVERIFIED
+    )
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.post(
+        f"{URL}{truck.slug}/request_verification/", {"method": "PERMIT"}, format="json"
+    )
+    assert resp.status_code == 400
+
+
+def test_request_verification_conflict_when_already_verified():
+    owner = OwnerFactory()
+    truck = TruckFactory(
+        owner=owner, verification_status=Truck.VerificationStatus.VERIFIED
+    )
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.post(
+        f"{URL}{truck.slug}/request_verification/",
+        {"method": "PERMIT", "evidence_note": "x"},
+        format="json",
+    )
+    assert resp.status_code == 409
+    truck.refresh_from_db()
+    assert truck.verification_status == Truck.VerificationStatus.VERIFIED  # unchanged
+
+
+def test_request_verification_by_non_owner_returns_404():
+    other = TruckFactory(verification_status=Truck.VerificationStatus.UNVERIFIED)
+    client = APIClient()
+    client.force_authenticate(user=OwnerFactory())
+    resp = client.post(
+        f"{URL}{other.slug}/request_verification/",
+        {"method": "PERMIT", "evidence_note": "x"},
+        format="json",
+    )
+    assert resp.status_code == 404
+
+
+def test_owner_can_set_cuisine_tags():
+    owner = OwnerFactory()
+    korean = CuisineFactory(name="Korean")
+    mexican = CuisineFactory(name="Mexican")
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    resp = client.post(
+        URL,
+        {
+            "name": "Fusion",
+            "primary_cuisine": korean.id,
+            "cuisine_tags": [korean.id, mexican.id],
+            "status": "ACTIVE",
+        },
+        format="json",
+    )
+    assert resp.status_code == 201
+    truck = Truck.objects.get(name="Fusion")
+    assert set(truck.cuisine_tags.values_list("id", flat=True)) == {
+        korean.id,
+        mexican.id,
+    }
+
+
+def test_truck_hard_delete_is_disabled():
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    client = APIClient()
+    client.force_authenticate(user=owner)
+    assert client.delete(f"{URL}{truck.slug}/").status_code == 405

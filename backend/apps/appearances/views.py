@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from apps.core.geo import point_from_latlng
 from apps.core.permissions import IsOwnerRole
 
 from .models import Appearance, PresenceConfirmation
@@ -60,6 +61,7 @@ class OwnerAppearanceViewSet(viewsets.ModelViewSet):
     owner via the truck relation."""
 
     permission_classes = [IsOwnerRole]
+    http_method_names = ["get", "post", "put", "patch", "head", "options", "trace"]
 
     def get_queryset(self):
         return Appearance.objects.filter(truck__owner=self.request.user).select_related(
@@ -75,13 +77,11 @@ class OwnerAppearanceViewSet(viewsets.ModelViewSet):
     def confirm(self, request, pk=None):
         """Owner 'I'm here now'. Optional latitude/longitude of where they are."""
         appearance = self.get_object()
-        point = None
-        lat, lng = request.data.get("latitude"), request.data.get("longitude")
-        if lat is not None and lng is not None:
-            try:
-                point = Point(float(lng), float(lat), srid=4326)
-            except (TypeError, ValueError):
-                raise ValidationError("latitude/longitude must be numbers.")
+        if appearance.status != Appearance.Status.SCHEDULED:
+            raise ValidationError("Only scheduled appearances can be confirmed.")
+        point = point_from_latlng(
+            request.data.get("latitude"), request.data.get("longitude")
+        )
         PresenceConfirmation.objects.create(
             appearance=appearance,
             confirmed_by=request.user,

@@ -48,6 +48,7 @@ class OwnerTruckViewSet(viewsets.ModelViewSet):
     serializer_class = TruckWriteSerializer
     permission_classes = [IsOwnerRole]
     lookup_field = "slug"
+    http_method_names = ["get", "post", "put", "patch", "head", "options", "trace"]
 
     def get_queryset(self):
         return (
@@ -61,14 +62,23 @@ class OwnerTruckViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def request_verification(self, request, slug=None):
-        """Submit verification evidence; moves the truck to PENDING review."""
+        """Submit verification evidence; moves the truck to PENDING review.
+
+        Disallowed while already pending or verified (no queue spam or
+        self-demotion). Resubmission is allowed from UNVERIFIED or REJECTED.
+        """
         truck = self.get_object()
+        if truck.verification_status in (
+            Truck.VerificationStatus.PENDING,
+            Truck.VerificationStatus.VERIFIED,
+        ):
+            return Response(
+                {"detail": "Verification is already pending or approved."},
+                status=status.HTTP_409_CONFLICT,
+            )
         serializer = VerificationSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        verification = serializer.save(truck=truck)
+        serializer.save(truck=truck)
         truck.verification_status = Truck.VerificationStatus.PENDING
         truck.save(update_fields=["verification_status", "updated_at"])
-        return Response(
-            VerificationSubmitSerializer(verification).data,
-            status=status.HTTP_201_CREATED,
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
