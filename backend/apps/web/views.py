@@ -1,13 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth import login
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from apps.trucks.models import Truck
 
-from .forms import OwnerRegistrationForm, TruckEditForm, TruckForm
+from .forms import OwnerRegistrationForm, TruckForm
 from .mixins import OwnerRequiredMixin
 
 
@@ -61,7 +62,7 @@ class TruckCreateView(OwnerRequiredMixin, CreateView):
 
 class TruckUpdateView(OwnerRequiredMixin, UpdateView):
     model = Truck
-    form_class = TruckEditForm
+    form_class = TruckForm
     template_name = "web/truck_form.html"
     success_url = reverse_lazy("dashboard")
 
@@ -76,9 +77,28 @@ class TruckUpdateView(OwnerRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["title"] = "Edit truck"
-        ctx["subtitle"] = "Update your truck's details, photos, and status."
+        ctx["subtitle"] = "Update your truck's details and photos."
         ctx["submit_label"] = "Save changes"
         return ctx
+
+
+class TruckStatusToggleView(OwnerRequiredMixin, View):
+    """Deliberate live/not-live toggle, separate from editing details. Active
+    flips to Paused; Draft or Paused flips to Active (a truck never returns to
+    the internal Draft state). POST-only so it is never triggered by a link."""
+
+    def post(self, request, slug):
+        # Owner-scoped: another owner's slug 404s, never 403.
+        truck = get_object_or_404(request.user.trucks, slug=slug)
+        if truck.status == Truck.Status.ACTIVE:
+            truck.status = Truck.Status.PAUSED
+            message = f'"{truck.name}" is now paused and hidden from customers.'
+        else:
+            truck.status = Truck.Status.ACTIVE
+            message = f'"{truck.name}" is now live.'
+        truck.save(update_fields=["status", "updated_at"])
+        messages.success(request, message)
+        return redirect("dashboard")
 
 
 # Single source for the style-guide swatches; mirrors the design-system tokens.

@@ -63,9 +63,12 @@ class EmailAuthenticationForm(AuthenticationForm):
 
 
 class TruckForm(forms.ModelForm):
-    """Create/edit a truck from the owner dashboard. owner, slug, and
-    verification_status are managed server-side and never exposed here, so an
-    owner cannot reassign a truck or self-verify through the form.
+    """Create/edit a truck's details from the owner dashboard. owner, slug,
+    status, and verification_status are managed server-side and never exposed
+    here, so an owner cannot reassign a truck or self-verify through the form,
+    and editing details never changes a truck's live status. Going live and
+    pausing are deliberate dashboard actions (TruckStatusToggleView), separate
+    from editing.
 
     This is a deliberate subset of the API's TruckWriteSerializer: timezone and
     accepts_catering_inquiries are intentionally omitted for now. timezone will
@@ -96,29 +99,3 @@ class TruckForm(forms.ModelForm):
         active = Cuisine.objects.filter(is_active=True)
         self.fields["primary_cuisine"].queryset = active
         self.fields["cuisine_tags"].queryset = active
-
-
-class TruckEditForm(TruckForm):
-    """Adds the Active/Paused status control for an existing truck.
-
-    status is declared as an explicit ChoiceField (not the model-derived one)
-    so DRAFT is rejected at validation, not merely hidden from the rendered
-    <select>. DRAFT is an internal starting state, never a user-facing choice."""
-
-    status = forms.ChoiceField(
-        choices=[
-            (Truck.Status.ACTIVE, Truck.Status.ACTIVE.label),
-            (Truck.Status.PAUSED, Truck.Status.PAUSED.label),
-        ],
-        help_text="Active shows your truck to customers; Paused hides it.",
-    )
-
-    class Meta(TruckForm.Meta):
-        fields = TruckForm.Meta.fields + ["status"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.status == Truck.Status.DRAFT:
-            # A freshly created draft: default the toggle to Active so the first
-            # save publishes it (still subject to the verification gate).
-            self.initial["status"] = Truck.Status.ACTIVE

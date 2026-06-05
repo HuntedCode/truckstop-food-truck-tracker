@@ -87,11 +87,18 @@ Mobile-first; owners post from a phone. (Layout sketches, not final.)
 |  Logo        [ upload ]        |
 |  Hero photo  [ upload ]        |
 |  Website/Phone/Instagram ...   |
-|  Status      ( ) Active        |
 |                                |
 |         [ Save truck ]         |
 +--------------------------------+
 ```
+
+> **Status is not in this form.** Editing only changes details. A truck's
+> live state changes via a deliberate **Go live / Pause** button on the
+> dashboard (`TruckStatusToggleView`, POST-only), so saving an edit never
+> publishes by accident. New trucks start in the internal `DRAFT` state,
+> shown to owners as **"Not live yet"** (never the raw word "Draft"); the
+> first **Go live** moves them to `ACTIVE` (still gated on verification for
+> public visibility).
 
 **Post appearance (the spine)**
 ```

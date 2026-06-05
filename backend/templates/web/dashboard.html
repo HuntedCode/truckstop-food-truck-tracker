@@ -19,8 +19,9 @@
         </div>
         <span class="text-xs font-medium px-2.5 py-1 rounded-full
           {% if truck.status == 'ACTIVE' %}bg-status-here/15 text-status-here
-          {% else %}bg-status-away/15 text-ink-muted{% endif %}">
-          {{ truck.get_status_display }}
+          {% elif truck.status == 'PAUSED' %}bg-status-away/15 text-ink-muted
+          {% else %}bg-status-soon/15 text-status-soon-strong{% endif %}">
+          {% if truck.status == 'ACTIVE' %}Active{% elif truck.status == 'PAUSED' %}Paused{% else %}Not live yet{% endif %}
         </span>
       </div>
       <div class="mt-2 flex items-center justify-between text-sm">
@@ -33,7 +34,17 @@
             <span class="text-ink-muted">Not verified</span>
           {% endif %}
         </span>
-        <a href="{% url 'truck-edit' truck.slug %}" class="text-primary underline underline-offset-2">Edit</a>
+        <div class="flex items-center gap-4">
+          <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
+            {% csrf_token %}
+            {% if truck.status == 'ACTIVE' %}
+              <button class="font-medium text-ink-muted hover:text-ink">Pause</button>
+            {% else %}
+              <button class="font-medium text-status-here hover:underline">Go live</button>
+            {% endif %}
+          </form>
+          <a href="{% url 'truck-edit' truck.slug %}" class="text-primary underline underline-offset-2">Edit</a>
+        </div>
       </div>
     </div>
     {% endfor %}

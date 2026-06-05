@@ -144,13 +144,13 @@ def test_owner_can_edit_own_truck(client):
             "primary_cuisine": truck.primary_cuisine.pk,
             "cuisine_tags": [],
             "description": "",
-            "status": Truck.Status.PAUSED,
         },
     )
     assert resp.status_code == 302
     truck.refresh_from_db()
     assert truck.name == "New Name"
-    assert truck.status == Truck.Status.PAUSED
+    # Editing details never changes live status (factory truck stays ACTIVE).
+    assert truck.status == Truck.Status.ACTIVE
     # Slugs are intentionally immutable (stable URLs), matching the API where
     # slug is read-only. A rename does not change the slug.
     assert truck.slug == original_slug
@@ -163,39 +163,14 @@ def test_owner_cannot_edit_another_owners_truck(client):
     assert client.get(reverse("truck-edit", args=[other_truck.slug])).status_code == 404
 
 
-def test_edit_status_choices_exclude_draft(client):
-    owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.DRAFT)
-    client.force_login(owner)
-    content = client.get(reverse("truck-edit", args=[truck.slug])).content.decode()
-    assert 'value="ACTIVE"' in content
-    assert 'value="PAUSED"' in content
-    assert 'value="DRAFT"' not in content  # internal state, not user-facing
-
-
-def test_edit_rejects_draft_status_on_post(client):
-    """DRAFT must be rejected by validation on POST, not merely hidden on render."""
-    owner = OwnerFactory()
-    truck = TruckFactory(owner=owner, status=Truck.Status.ACTIVE)
-    client.force_login(owner)
-    resp = client.post(
-        reverse("truck-edit", args=[truck.slug]),
-        {
-            "name": truck.name,
-            "primary_cuisine": truck.primary_cuisine.pk,
-            "cuisine_tags": [],
-            "status": Truck.Status.DRAFT,  # not an allowed choice
-        },
-    )
-    assert resp.status_code == 200  # re-rendered with a form error
-    truck.refresh_from_db()
-    assert truck.status == Truck.Status.ACTIVE  # unchanged
-
-
-def test_edit_ignores_injected_owner_and_verification(client):
+def test_edit_ignores_injected_status_owner_and_verification(client):
+    """Editing details cannot change status, owner, or verification, even when
+    those are injected into the POST. Status changes only via the toggle."""
     owner = OwnerFactory()
     truck = TruckFactory(
-        owner=owner, verification_status=Truck.VerificationStatus.UNVERIFIED
+        owner=owner,
+        status=Truck.Status.PAUSED,
+        verification_status=Truck.VerificationStatus.UNVERIFIED,
     )
     other = OwnerFactory()
     client.force_login(owner)
@@ -205,12 +180,13 @@ def test_edit_ignores_injected_owner_and_verification(client):
             "name": truck.name,
             "primary_cuisine": truck.primary_cuisine.pk,
             "cuisine_tags": [],
-            "status": Truck.Status.ACTIVE,
+            "status": Truck.Status.ACTIVE,  # not a form field
             "owner": other.pk,  # not a form field
             "verification_status": Truck.VerificationStatus.VERIFIED,  # not a form field
         },
     )
     truck.refresh_from_db()
+    assert truck.status == Truck.Status.PAUSED
     assert truck.owner == owner
     assert truck.verification_status == Truck.VerificationStatus.UNVERIFIED
 
@@ -227,7 +203,6 @@ def test_cuisine_tags_persist(client):
             "name": truck.name,
             "primary_cuisine": truck.primary_cuisine.pk,
             "cuisine_tags": [tag_a.pk, tag_b.pk],
-            "status": Truck.Status.ACTIVE,
         },
     )
     assert resp.status_code == 302
@@ -239,7 +214,7 @@ def test_edit_post_another_owners_truck_404(client):
     client.force_login(OwnerFactory())
     resp = client.post(
         reverse("truck-edit", args=[other_truck.slug]),
-        {"name": "Hijacked", "cuisine_tags": [], "status": Truck.Status.ACTIVE},
+        {"name": "Hijacked", "cuisine_tags": []},
     )
     assert resp.status_code == 404
     other_truck.refresh_from_db()
@@ -274,3 +249,89 @@ def test_oversized_image_rejected():
     form = TruckForm(data={"name": "Too Big"}, files={"logo": big})
     assert not form.is_valid()
     assert "logo" in form.errors
+
+
+# --- Status toggle (Go live / Pause) ---------------------------------------
+
+
+def test_go_live_activates_draft(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, status=Truck.Status.DRAFT)
+    client.force_login(owner)
+    resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    assert resp.status_code == 302
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.ACTIVE
+
+
+def test_pause_active_truck(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, status=Truck.Status.ACTIVE)
+    client.force_login(owner)
+    client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.PAUSED
+
+
+def test_go_live_reactivates_paused(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, status=Truck.Status.PAUSED)
+    client.force_login(owner)
+    client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.ACTIVE
+
+
+def test_toggle_requires_post(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, status=Truck.Status.DRAFT)
+    client.force_login(owner)
+    # GET is rejected (405) so status never changes via a link or prefetch.
+    resp = client.get(reverse("truck-status-toggle", args=[truck.slug]))
+    assert resp.status_code == 405
+    truck.refresh_from_db()
+    assert truck.status == Truck.Status.DRAFT
+
+
+def test_toggle_forbidden_for_customer(client):
+    truck = TruckFactory(status=Truck.Status.DRAFT)
+    client.force_login(UserFactory())  # CUSTOMER
+    resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    assert resp.status_code == 403
+
+
+def test_toggle_requires_login(client):
+    truck = TruckFactory(status=Truck.Status.DRAFT)
+    resp = client.post(reverse("truck-status-toggle", args=[truck.slug]))
+    assert resp.status_code == 302
+    assert reverse("login") in resp.url
+
+
+def test_toggle_another_owners_truck_404(client):
+    other_truck = TruckFactory(status=Truck.Status.ACTIVE)
+    client.force_login(OwnerFactory())
+    resp = client.post(reverse("truck-status-toggle", args=[other_truck.slug]))
+    assert resp.status_code == 404
+    other_truck.refresh_from_db()
+    assert other_truck.status == Truck.Status.ACTIVE  # unchanged
+
+
+# --- Dashboard rendering ----------------------------------------------------
+
+
+def test_dashboard_shows_not_live_for_draft(client):
+    owner = OwnerFactory()
+    TruckFactory(owner=owner, status=Truck.Status.DRAFT)
+    client.force_login(owner)
+    content = client.get(reverse("dashboard")).content.decode()
+    assert "Not live yet" in content
+    assert "Draft" not in content  # the internal label never leaks to the UI
+    assert "Go live" in content  # the explicit publish action is offered
+
+
+def test_dashboard_shows_pause_for_active(client):
+    owner = OwnerFactory()
+    TruckFactory(owner=owner, status=Truck.Status.ACTIVE)
+    client.force_login(owner)
+    content = client.get(reverse("dashboard")).content.decode()
+    assert "Pause" in content

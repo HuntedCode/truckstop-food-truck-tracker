@@ -9,6 +9,7 @@ from .views import (
     RegisterView,
     StyleGuideView,
     TruckCreateView,
+    TruckStatusToggleView,
     TruckUpdateView,
 )
 
@@ -33,6 +34,11 @@ urlpatterns = [
         "dashboard/truck/<slug:slug>/edit/",
         TruckUpdateView.as_view(),
         name="truck-edit",
+    ),
+    path(
+        "dashboard/truck/<slug:slug>/status/",
+        TruckStatusToggleView.as_view(),
+        name="truck-status-toggle",
     ),
 ]
 
