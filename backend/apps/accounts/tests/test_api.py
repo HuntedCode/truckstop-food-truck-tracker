@@ -57,3 +57,44 @@ def test_me_returns_current_user():
     resp = client.get("/api/v1/auth/me/")
     assert resp.status_code == 200
     assert resp.data["email"] == "me@example.com"
+
+
+def test_me_patch_updates_only_display_name():
+    user = UserFactory(
+        email="patch@example.com",
+        role=User.Role.CUSTOMER,
+        display_name="Old",
+    )
+    client = APIClient()
+    client.force_authenticate(user=user)
+    resp = client.patch(
+        "/api/v1/auth/me/",
+        {"display_name": "New", "role": "OWNER", "email": "hacker@example.com"},
+        format="json",
+    )
+    assert resp.status_code == 200
+    user.refresh_from_db()
+    assert user.display_name == "New"
+    assert user.role == User.Role.CUSTOMER  # read-only, unchanged
+    assert user.email == "patch@example.com"  # read-only, unchanged
+
+
+def test_token_obtain_with_valid_credentials():
+    UserFactory(email="login@example.com")  # default password: password123!
+    resp = APIClient().post(
+        "/api/v1/auth/token/",
+        {"email": "login@example.com", "password": "password123!"},
+        format="json",
+    )
+    assert resp.status_code == 200
+    assert "access" in resp.data and "refresh" in resp.data
+
+
+def test_token_obtain_with_bad_credentials():
+    UserFactory(email="login2@example.com")
+    resp = APIClient().post(
+        "/api/v1/auth/token/",
+        {"email": "login2@example.com", "password": "wrong"},
+        format="json",
+    )
+    assert resp.status_code == 401

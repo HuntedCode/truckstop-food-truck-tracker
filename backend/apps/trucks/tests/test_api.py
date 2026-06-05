@@ -46,3 +46,25 @@ def test_cuisine_list_is_unpaginated():
     resp = APIClient().get("/api/v1/cuisines/")
     assert resp.status_code == 200
     assert isinstance(resp.data, list)  # pagination_class = None
+
+
+def test_draft_or_unverified_truck_detail_returns_404():
+    draft = TruckFactory(status=Truck.Status.DRAFT)
+    unverified = TruckFactory(verification_status=Truck.VerificationStatus.UNVERIFIED)
+    client = APIClient()
+    assert client.get(f"/api/v1/trucks/{draft.slug}/").status_code == 404
+    assert client.get(f"/api/v1/trucks/{unverified.slug}/").status_code == 404
+
+
+def test_truck_exposes_is_verified_not_status():
+    truck = TruckFactory()
+    resp = APIClient().get(f"/api/v1/trucks/{truck.slug}/")
+    assert resp.data["is_verified"] is True
+    assert "verification_status" not in resp.data
+
+
+def test_truck_list_uses_paginated_envelope():
+    TruckFactory()
+    resp = APIClient().get("/api/v1/trucks/")
+    for key in ("count", "next", "previous", "results"):
+        assert key in resp.data

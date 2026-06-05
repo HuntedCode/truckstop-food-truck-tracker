@@ -12,7 +12,7 @@ class AppearanceSerializer(serializers.ModelSerializer):
     latitude = serializers.SerializerMethodField()
     longitude = serializers.SerializerMethodField()
     is_live = serializers.SerializerMethodField()
-    is_verified_present = serializers.BooleanField(read_only=True)
+    is_verified_present = serializers.ReadOnlyField()
     distance_km = serializers.SerializerMethodField()
 
     class Meta:

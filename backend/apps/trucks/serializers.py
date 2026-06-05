@@ -14,6 +14,7 @@ class TruckSerializer(serializers.ModelSerializer):
 
     primary_cuisine = CuisineSerializer(read_only=True)
     cuisine_tags = CuisineSerializer(many=True, read_only=True)
+    is_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = Truck
@@ -30,5 +31,8 @@ class TruckSerializer(serializers.ModelSerializer):
             "phone",
             "instagram",
             "accepts_catering_inquiries",
-            "verification_status",
+            "is_verified",
         ]
+
+    def get_is_verified(self, obj):
+        return obj.verification_status == Truck.VerificationStatus.VERIFIED

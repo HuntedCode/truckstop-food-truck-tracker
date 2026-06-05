@@ -7,7 +7,7 @@
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
-| POST | `/auth/register/` | Public | Create a user: `{email, password, role, display_name}`. `role` is `OWNER` or `CUSTOMER` (strict, fixed after signup). |
+| POST | `/auth/register/` | Public | Create a user: `{email, password, role, display_name}`. `role` is `OWNER` or `CUSTOMER` (strict, fixed after signup). Rate-limited per IP. |
 | POST | `/auth/token/` | Public | Obtain JWT access + refresh from `{email, password}`. |
 | POST | `/auth/token/refresh/` | Public | Exchange a refresh token for a new access token. |
 | GET | `/auth/me/` | Authenticated | The current user. |
