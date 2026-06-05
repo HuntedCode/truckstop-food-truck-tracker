@@ -29,9 +29,9 @@ The logo must feel at home in **both**, on a bright tomato-red header and on a c
 - It's a coined blend of **curb** (curbside, where trucks serve) + **feast** (appetite, abundance).
 - You may visually distinguish the two halves in the wordmark (for example "Curb" and "feast" in two colors or two weights), but it is always written and read as one word.
 
-## Mark / icon concept (a strong direction, surprise us within it)
+## Mark / icon concept (the direction we want)
 
-The product's spine is **location + time**, so the leading idea is a **map pin fused with food**:
+The product's spine is **location + time**, so the concept we want is a **map pin fused with food**. This is the chosen direction; refine and elevate it, but please stay within it:
 
 - A **map pin** whose body suggests food: a plate, a fork, rising steam, a bun, a taco, or a small **food-truck** silhouette.
 - Because the name is "feast," lean **appetizing** (steam, fork, plate) rather than a purely literal truck.
