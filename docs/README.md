@@ -30,8 +30,9 @@ System documentation for TruckStop. Per the project standard, when a system's be
 | [architecture/decisions/](architecture/decisions/) | Architecture Decision Records (ADRs): the significant, hard-to-reverse decisions with context, choice, and what would make us revisit. |
 | [guides/testing.md](guides/testing.md) | The testing strategy: principles, the test pyramid, backend/mobile tooling, what to test at each layer, and the CI gate. |
 | [guides/local-dev.md](guides/local-dev.md) | How to run the backend locally via Docker Compose (Postgres+PostGIS): quick start, tests, common commands, layout. |
+| [reference/api-endpoints.md](reference/api-endpoints.md) | The DRF JSON API: auth (register/me/token), public discovery (cuisines, gated trucks, the "near me" appearances endpoint), and the write endpoints coming next. |
 
-_Next docs to write (during the MVP build): `reference/api-endpoints.md`, `guides/local-dev.md`._
+_Next docs to write (during the MVP build): `reference/env-vars.md`, `guides/deploy.md`._
 
 ## Writing Docs
 
