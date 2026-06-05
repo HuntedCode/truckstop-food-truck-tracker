@@ -65,6 +65,8 @@ Cross-platform, free, available on both web and Expo (Google Fonts).
 | Headings / display | **Poppins** (600/700) | Friendly geometric, approachable but clean. Carries the personality. |
 | Body / UI | **Inter** (400/500/600) | Highly legible at small sizes, neutral workhorse. |
 
+> **Confirmed (2026-06-05):** Poppins is the single display/brand font (including the logo wordmark); Inter is the body font. We weighed a second display font per audience (Nunito for owners) but chose one font for cohesion, lower risk, and a consistent logo. The owner-vs-customer "two tempos" difference comes from **treatment** (owner: restrained weight/size; customer: bold and large), not a different font.
+
 **Type scale** (px, mobile-first): 12 (caption), 14 (body-sm), 16 (body), 18 (lead), 20 (h4), 24 (h3), 30 (h2), 36 (h1). Line-height ~1.4 body, ~1.2 headings.
 
 ## Spacing, Radius, Elevation
