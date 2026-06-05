@@ -41,6 +41,8 @@ Defined once as the source of truth. Web consumes them as CSS custom properties;
 | `color.ink.muted` | `#6B5D50` | Secondary text, captions. |
 | `color.border` | `#E7DDD2` | Hairlines, dividers, card borders. |
 
+> **Primary confirmed (2026-06-05):** `#E84A27` (bright tomato), chosen over deeper variants after in-context review. The brightness carries the appetizing energy the brand wants; the deeper tones read muted.
+
 ### Semantic status (mapped to the spine)
 
 Status is part of the product's core meaning ("is the truck here right now?"), so it gets dedicated tokens. **Never rely on color alone**: always pair with a label and/or icon (accessibility).
@@ -48,7 +50,8 @@ Status is part of the product's core meaning ("is the truck here right now?"), s
 | Token | Hex | Meaning |
 |---|---|---|
 | `color.status.here` | `#2E7D54` | Here now / open / verified (herb green). |
-| `color.status.soon` | `#F2A900` | Scheduled today / coming soon (amber). |
+| `color.status.soon` | `#F2A900` | Scheduled / coming soon (amber). Fills, dots, and tints only. |
+| `color.status.soon.strong` | `#8A5300` | Text-safe deep amber for amber *text* on light backgrounds (bright amber fails contrast as text). |
 | `color.status.away` | `#9A8C7D` | Not here / closed (muted warm grey). |
 | `color.error` | `#D7382B` | Errors, destructive actions. |
 | `color.info` | `#1F6FEB` | Links, informational accents. |
