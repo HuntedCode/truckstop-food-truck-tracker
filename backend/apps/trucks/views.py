@@ -1,7 +1,16 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from apps.core.permissions import IsOwnerRole
 
 from .models import Cuisine, Truck
-from .serializers import CuisineSerializer, TruckSerializer
+from .serializers import (
+    CuisineSerializer,
+    TruckSerializer,
+    TruckWriteSerializer,
+    VerificationSubmitSerializer,
+)
 
 
 class CuisineViewSet(viewsets.ReadOnlyModelViewSet):
@@ -30,3 +39,36 @@ class TruckViewSet(viewsets.ReadOnlyModelViewSet):
         if cuisine:
             qs = qs.filter(primary_cuisine__slug=cuisine)
         return qs
+
+
+class OwnerTruckViewSet(viewsets.ModelViewSet):
+    """Owner management of their own trucks (including drafts). Scoped to the
+    requesting owner, so another owner's trucks are simply not found."""
+
+    serializer_class = TruckWriteSerializer
+    permission_classes = [IsOwnerRole]
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return (
+            Truck.objects.filter(owner=self.request.user)
+            .select_related("primary_cuisine")
+            .prefetch_related("cuisine_tags")
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=["post"])
+    def request_verification(self, request, slug=None):
+        """Submit verification evidence; moves the truck to PENDING review."""
+        truck = self.get_object()
+        serializer = VerificationSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        verification = serializer.save(truck=truck)
+        truck.verification_status = Truck.VerificationStatus.PENDING
+        truck.save(update_fields=["verification_status", "updated_at"])
+        return Response(
+            VerificationSubmitSerializer(verification).data,
+            status=status.HTTP_201_CREATED,
+        )

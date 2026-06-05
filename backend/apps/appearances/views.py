@@ -1,9 +1,13 @@
 from django.contrib.gis.geos import Point
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from .models import Appearance
-from .serializers import AppearanceSerializer
+from apps.core.permissions import IsOwnerRole
+
+from .models import Appearance, PresenceConfirmation
+from .serializers import AppearanceSerializer, AppearanceWriteSerializer
 
 DEFAULT_RADIUS_KM = 5.0
 MAX_RADIUS_KM = 50.0
@@ -49,3 +53,41 @@ class AppearanceViewSet(viewsets.ReadOnlyModelViewSet):
         if not (0 < radius_km <= MAX_RADIUS_KM):
             raise ValidationError(f"radius_km must be in (0, {MAX_RADIUS_KM}].")
         return Point(lng_f, lat_f, srid=4326), radius_km
+
+
+class OwnerAppearanceViewSet(viewsets.ModelViewSet):
+    """Owner management of their trucks' appearances. Scoped to the requesting
+    owner via the truck relation."""
+
+    permission_classes = [IsOwnerRole]
+
+    def get_queryset(self):
+        return Appearance.objects.filter(truck__owner=self.request.user).select_related(
+            "truck"
+        )
+
+    def get_serializer_class(self):
+        if self.action in ("create", "update", "partial_update"):
+            return AppearanceWriteSerializer
+        return AppearanceSerializer
+
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        """Owner 'I'm here now'. Optional latitude/longitude of where they are."""
+        appearance = self.get_object()
+        point = None
+        lat, lng = request.data.get("latitude"), request.data.get("longitude")
+        if lat is not None and lng is not None:
+            try:
+                point = Point(float(lng), float(lat), srid=4326)
+            except (TypeError, ValueError):
+                raise ValidationError("latitude/longitude must be numbers.")
+        PresenceConfirmation.objects.create(
+            appearance=appearance,
+            confirmed_by=request.user,
+            source=PresenceConfirmation.Source.OWNER,
+            kind=PresenceConfirmation.Kind.HERE_NOW,
+            point=point,
+        )
+        appearance.refresh_from_db()
+        return Response(AppearanceSerializer(appearance).data)

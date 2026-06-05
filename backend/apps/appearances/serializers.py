@@ -1,5 +1,7 @@
+from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
+from apps.trucks.models import Truck
 from apps.trucks.serializers import TruckSerializer
 
 from .models import Appearance
@@ -52,3 +54,56 @@ class AppearanceSerializer(serializers.ModelSerializer):
         if km is None:
             km = float(distance) / 1000.0
         return round(km, 3)
+
+
+class AppearanceWriteSerializer(serializers.ModelSerializer):
+    """Owner create/update serializer. Coordinates come from the owner's
+    confirmed pin as latitude/longitude and are stored as a point."""
+
+    truck = serializers.SlugRelatedField(
+        slug_field="slug", queryset=Truck.objects.all()
+    )
+    latitude = serializers.FloatField(write_only=True)
+    longitude = serializers.FloatField(write_only=True)
+
+    class Meta:
+        model = Appearance
+        fields = [
+            "id",
+            "truck",
+            "latitude",
+            "longitude",
+            "address",
+            "location_name",
+            "coordinates_confirmed",
+            "start_at",
+            "end_at",
+            "status",
+        ]
+        read_only_fields = ["id"]
+
+    def validate_truck(self, truck):
+        request = self.context["request"]
+        if truck.owner_id != request.user.id:
+            raise serializers.ValidationError("You do not own this truck.")
+        return truck
+
+    def validate(self, attrs):
+        start = attrs.get("start_at") or getattr(self.instance, "start_at", None)
+        end = attrs.get("end_at") or getattr(self.instance, "end_at", None)
+        if start and end and end <= start:
+            raise serializers.ValidationError("end_at must be after start_at.")
+        return attrs
+
+    def _build_point(self, validated_data):
+        lat = validated_data.pop("latitude", None)
+        lng = validated_data.pop("longitude", None)
+        if lat is not None and lng is not None:
+            validated_data["location"] = Point(lng, lat, srid=4326)
+        return validated_data
+
+    def create(self, validated_data):
+        return super().create(self._build_point(validated_data))
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._build_point(validated_data))

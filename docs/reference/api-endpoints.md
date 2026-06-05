@@ -32,6 +32,19 @@ The discovery endpoints never expose draft/paused/unverified trucks: the gate is
 |---|---|---|---|
 | GET | `/health/` | Public | Liveness probe -> `{"status": "ok"}`. |
 
-## Coming next (write API, slice 2)
+## Owner management (OWNER role)
 
-Not yet built: owner truck/appearance CRUD, "I'm here now" confirm, verification submission, customer follow/unfollow, notification preferences, push-token registration, and engagement-event ingest. These carry the full anonymous/customer/owner permission matrix and will be added with tests.
+Scoped to the requesting owner: another owner's objects are simply not found (404).
+
+| Method | Path | Notes |
+|---|---|---|
+| GET / POST | `/owner/trucks/` | List own trucks (including drafts) / create one (owner set from the request, slug auto-generated). |
+| GET / PATCH / PUT / DELETE | `/owner/trucks/{slug}/` | Manage an own truck. `verification_status` is read-only. |
+| POST | `/owner/trucks/{slug}/request_verification/` | Submit evidence (`method`, `evidence_image`/`evidence_note`); moves the truck to PENDING review. |
+| GET / POST | `/owner/appearances/` | List own appearances / post one (`truck` slug, `latitude`, `longitude`, `address`, `start_at`, `end_at`). |
+| GET / PATCH / PUT / DELETE | `/owner/appearances/{id}/` | Manage an own appearance. |
+| POST | `/owner/appearances/{id}/confirm/` | "I'm here now": records an owner presence confirmation (optional `latitude`/`longitude`) and refreshes the appearance's verified-present state. |
+
+## Coming next (write API, remainder)
+
+Not yet built: customer follow/unfollow, notification preferences, push-token registration, and engagement-event ingest (the customer-role and anonymous-ingest paths). Added next with tests.
