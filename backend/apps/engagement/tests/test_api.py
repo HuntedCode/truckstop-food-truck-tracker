@@ -2,6 +2,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from apps.accounts.tests.factories import OwnerFactory, UserFactory
+from apps.appearances.tests.factories import AppearanceFactory
 from apps.engagement.models import EngagementEvent, Follow
 from apps.trucks.models import Truck
 from apps.trucks.tests.factories import TruckFactory
@@ -114,3 +115,88 @@ def test_authenticated_event_sets_user():
 def test_invalid_event_type_is_rejected():
     resp = APIClient().post(EVENTS, {"event_type": "NONSENSE"}, format="json")
     assert resp.status_code == 400
+
+
+def test_event_can_reference_an_appearance():
+    appearance = AppearanceFactory()  # public truck by default
+    resp = APIClient().post(
+        EVENTS,
+        {"event_type": "APPEARANCE_VIEW", "appearance": appearance.id},
+        format="json",
+    )
+    assert resp.status_code == 201
+    assert EngagementEvent.objects.filter(appearance=appearance).exists()
+
+
+def test_event_rejects_non_public_truck():
+    draft = TruckFactory(status=Truck.Status.DRAFT)
+    resp = APIClient().post(
+        EVENTS, {"event_type": "TRUCK_VIEW", "truck": draft.id}, format="json"
+    )
+    assert resp.status_code == 400
+
+
+def test_event_rejects_non_dict_metadata():
+    resp = APIClient().post(
+        EVENTS, {"event_type": "SEARCH", "metadata": [1, 2, 3]}, format="json"
+    )
+    assert resp.status_code == 400
+
+
+def test_event_rejects_oversized_metadata():
+    resp = APIClient().post(
+        EVENTS, {"event_type": "SEARCH", "metadata": {"x": "y" * 5000}}, format="json"
+    )
+    assert resp.status_code == 400
+
+
+# --- follow update/scoping edge cases ---
+
+
+def test_follow_patch_cannot_repoint_truck():
+    customer = UserFactory()
+    truck_a, truck_b = TruckFactory(), TruckFactory()
+    follow = Follow.objects.create(customer=customer, truck=truck_a)
+    resp = _auth(customer).patch(
+        f"{FOLLOWS}{follow.id}/", {"truck": truck_b.slug}, format="json"
+    )
+    assert resp.status_code == 200
+    follow.refresh_from_db()
+    assert follow.truck == truck_a  # truck is immutable
+
+
+def test_follow_patch_repoint_to_followed_truck_does_not_500():
+    customer = UserFactory()
+    truck_a, truck_b = TruckFactory(), TruckFactory()
+    follow_a = Follow.objects.create(customer=customer, truck=truck_a)
+    Follow.objects.create(customer=customer, truck=truck_b)
+    resp = _auth(customer).patch(
+        f"{FOLLOWS}{follow_a.id}/", {"truck": truck_b.slug}, format="json"
+    )
+    assert resp.status_code == 200  # no IntegrityError / 500
+    follow_a.refresh_from_db()
+    assert follow_a.truck == truck_a
+
+
+def test_customer_cannot_patch_another_customers_follow():
+    other = Follow.objects.create(customer=UserFactory(), truck=TruckFactory())
+    resp = _auth(UserFactory()).patch(
+        f"{FOLLOWS}{other.id}/", {"notifications_muted": True}, format="json"
+    )
+    assert resp.status_code == 404
+
+
+def test_follow_retrieve_is_scoped():
+    customer = UserFactory()
+    follow = Follow.objects.create(customer=customer, truck=TruckFactory())
+    assert _auth(customer).get(f"{FOLLOWS}{follow.id}/").status_code == 200
+    assert _auth(UserFactory()).get(f"{FOLLOWS}{follow.id}/").status_code == 404
+
+
+def test_follow_put_is_disabled():
+    customer = UserFactory()
+    follow = Follow.objects.create(customer=customer, truck=TruckFactory())
+    resp = _auth(customer).put(
+        f"{FOLLOWS}{follow.id}/", {"truck": TruckFactory().slug}, format="json"
+    )
+    assert resp.status_code == 405

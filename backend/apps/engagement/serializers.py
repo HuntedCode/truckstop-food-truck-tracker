@@ -1,5 +1,8 @@
+import json
+
 from rest_framework import serializers
 
+from apps.appearances.models import Appearance
 from apps.trucks.models import Truck
 from apps.trucks.serializers import TruckSerializer
 
@@ -22,9 +25,29 @@ class FollowSerializer(serializers.ModelSerializer):
         fields = ["id", "truck", "truck_detail", "notifications_muted", "created_at"]
         read_only_fields = ["id", "created_at"]
 
+    def update(self, instance, validated_data):
+        # A follow's truck is immutable; PATCH only toggles notifications_muted.
+        validated_data.pop("truck", None)
+        return super().update(instance, validated_data)
+
 
 class EngagementEventSerializer(serializers.ModelSerializer):
     """Ingest of an analytics event. user is set server-side."""
+
+    # Restrict to publicly-visible objects (no metric pollution / PK probing).
+    truck = serializers.PrimaryKeyRelatedField(
+        queryset=Truck.objects.filter(
+            status=Truck.Status.ACTIVE,
+            verification_status=Truck.VerificationStatus.VERIFIED,
+        ),
+        required=False,
+        allow_null=True,
+    )
+    appearance = serializers.PrimaryKeyRelatedField(
+        queryset=Appearance.objects.public(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = EngagementEvent
@@ -38,3 +61,10 @@ class EngagementEventSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def validate_metadata(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("metadata must be a JSON object.")
+        if len(json.dumps(value)) > 2048:
+            raise serializers.ValidationError("metadata is too large.")
+        return value

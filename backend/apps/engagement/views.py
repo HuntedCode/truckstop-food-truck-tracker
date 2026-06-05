@@ -1,11 +1,19 @@
 from rest_framework import generics, mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from apps.core.permissions import IsCustomerRole
 
 from .models import Follow
 from .serializers import EngagementEventSerializer, FollowSerializer
+
+
+class EventIngestAnonThrottle(AnonRateThrottle):
+    """Tighter rate for the public anonymous event firehose. Applies only to
+    anonymous requests; authenticated users fall under the user scope."""
+
+    scope = "events_anon"
 
 
 class FollowViewSet(
@@ -44,6 +52,7 @@ class EngagementEventCreateView(generics.CreateAPIView):
 
     serializer_class = EngagementEventSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [EventIngestAnonThrottle, UserRateThrottle]
 
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None

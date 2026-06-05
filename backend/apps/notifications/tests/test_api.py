@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from apps.accounts.tests.factories import UserFactory
+from apps.accounts.tests.factories import OwnerFactory, UserFactory
 from apps.notifications.models import NotificationPreference, PushToken
 
 pytestmark = pytest.mark.django_db
@@ -81,3 +81,26 @@ def test_delete_push_token():
 
 def test_push_tokens_require_auth():
     assert APIClient().get(TOKENS).status_code == 401
+
+
+def test_owner_can_use_notification_preference():
+    owner = OwnerFactory()
+    assert _auth(owner).get(PREFS).status_code == 200
+    assert (
+        _auth(owner).patch(PREFS, {"push_enabled": False}, format="json").status_code
+        == 200
+    )
+
+
+def test_notification_preference_put_is_disabled():
+    user = UserFactory()
+    resp = _auth(user).put(PREFS, {"push_enabled": False}, format="json")
+    assert resp.status_code == 405
+
+
+def test_register_push_token_rejects_bad_platform():
+    user = UserFactory()
+    resp = _auth(user).post(
+        TOKENS, {"token": "tok-x", "platform": "WINDOWS"}, format="json"
+    )
+    assert resp.status_code == 400

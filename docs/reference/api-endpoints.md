@@ -65,4 +65,4 @@ Scoped to the requesting owner: another owner's objects are simply not found (40
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
-| POST | `/events/` | Public | Append-only analytics event: `event_type` (required); optional `truck`, `appearance`, `device_id`, `metadata`. `user` is attached when authenticated. |
+| POST | `/events/` | Public | Append-only analytics event: `event_type` (required); optional `truck`, `appearance` (must be publicly visible), `device_id`, `metadata` (a small JSON object). `user` is attached when authenticated. Anonymous writes are rate-limited. |
