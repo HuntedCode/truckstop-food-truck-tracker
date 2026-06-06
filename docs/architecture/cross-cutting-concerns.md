@@ -36,8 +36,11 @@ Users have a right to delete (and laws require it). The data model already suppo
 
 ## Security
 
+> The concrete, trackable controls and their pre-launch triggers live in the
+> [security-checklist.md](security-checklist.md) gate. This section is the *why*.
+
 ### Image upload safety
-User photos are an attack surface and can leak data. **MVP, build into the upload pipeline:** validate type/size, resize, and **strip EXIF** (photos carry GPS coordinates and personal metadata). Serve from controlled storage.
+User photos are an attack surface and can leak data. **MVP, build into the upload pipeline:** validate type/size, resize, and **strip EXIF** (photos carry GPS coordinates and personal metadata). Serve from controlled storage. *(EXIF strip + resize + size limit are implemented in `apps.core.images`; private storage for PII evidence is still on the checklist.)*
 
 ### API hygiene
 Build into the API from the start: **pagination** (sane default + max page size), **DRF throttling** (separate anonymous and authenticated scopes), strict serializer **input validation**, and **distance units** (miles default, US-first; store canonical, format at the edge). Secrets via env vars (already a standard).
