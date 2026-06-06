@@ -20,8 +20,13 @@ import urllib.request
 from dataclasses import dataclass
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
+
+# Cap the geocoding response body so a hostile/buggy endpoint cannot exhaust
+# memory (the request timeout bounds time, not bytes).
+MAX_RESPONSE_BYTES = 1_000_000
 
 
 @dataclass(frozen=True)
@@ -42,32 +47,44 @@ class NominatimGeocoder:
     One adapter method, ``geocode_once``; retries/backoff are the client's job."""
 
     def __init__(self, base_url, user_agent, timeout):
+        # Refuse non-HTTP schemes so a misconfigured base URL can't make urlopen
+        # reach file://, ftp://, etc.
+        if not base_url.lower().startswith(("http://", "https://")):
+            raise ImproperlyConfigured(
+                f"Geocoding base URL must be http(s), got {base_url!r}."
+            )
         self.base_url = base_url
         self.user_agent = user_agent
         self.timeout = timeout
 
     def geocode_once(self, address):
         """One request. Returns a GeocodeResult, or None for no match. Raises
-        GeocodingError on a transport/HTTP/parse failure (retryable upstream)."""
+        GeocodingError on any transport/HTTP/parse failure (retryable upstream).
+
+        Note: Nominatim allows ~1 req/sec and 429s on abuse. That is fine for
+        our single-geocode-per-form-submit use; a batch caller would need
+        throttling and Retry-After handling (deferred)."""
         query = urllib.parse.urlencode({"q": address, "format": "json", "limit": 1})
         request = urllib.request.Request(
             f"{self.base_url}?{query}", headers={"User-Agent": self.user_agent}
         )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-            raise GeocodingError(f"Nominatim request failed: {exc}") from exc
-        if not payload:
-            return None
-        top = payload[0]
-        try:
+                body = response.read(MAX_RESPONSE_BYTES)
+            payload = json.loads(body.decode("utf-8"))
+            if not payload:
+                return None
+            top = payload[0]
             return GeocodeResult(
                 latitude=float(top["lat"]),
                 longitude=float(top["lon"]),
                 display_name=top.get("display_name", address),
             )
-        except (KeyError, TypeError, ValueError) as exc:
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise GeocodingError(f"Nominatim request failed: {exc}") from exc
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:
+            # Truncated/oversized body, non-JSON, non-list payload, or missing
+            # fields all collapse to a single "service gave us garbage" failure.
             raise GeocodingError(f"Nominatim response malformed: {exc}") from exc
 
 
@@ -89,7 +106,9 @@ class GeocodingClient:
         Raises GeocodingError if the service is unavailable after retries."""
         if not address or not address.strip():
             return None
-        attempts = self.max_retries + 1
+        # Clamp so a misconfigured negative retry count still makes one attempt
+        # and never falls through to `raise None`.
+        attempts = max(1, self.max_retries + 1)
         last_exc = None
         for attempt in range(attempts):
             try:
@@ -115,7 +134,7 @@ def _build_geocoder():
             user_agent=settings.GEOCODING_USER_AGENT,
             timeout=settings.GEOCODING_TIMEOUT,
         )
-    raise GeocodingError(f"Unknown geocoding provider: {provider!r}")
+    raise ImproperlyConfigured(f"Unknown geocoding provider: {provider!r}")
 
 
 def geocode(address):

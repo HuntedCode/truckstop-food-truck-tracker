@@ -3,12 +3,15 @@ import urllib.error
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 from apps.core.geocoding import (
     GeocodeResult,
     GeocodingClient,
     GeocodingError,
     NominatimGeocoder,
+    _build_geocoder,
+    geocode,
 )
 
 
@@ -74,6 +77,22 @@ def test_raises_after_exhausting_retries():
     assert len(sleeps) == 2  # slept between attempts, never after the last
 
 
+def test_negative_max_retries_still_attempts_once():
+    result = GeocodeResult(1.0, 2.0, "ok")
+    geo = _FakeGeocoder([result])
+    client = GeocodingClient(geocoder=geo, max_retries=-1, sleep=lambda s: None)
+    assert client.geocode("x") == result
+    assert geo.calls == 1
+
+
+def test_negative_max_retries_failure_raises_geocoding_error_not_typeerror():
+    geo = _FakeGeocoder([GeocodingError("boom")])
+    client = GeocodingClient(geocoder=geo, max_retries=-1, sleep=lambda s: None)
+    with pytest.raises(GeocodingError):  # never `raise None` -> TypeError
+        client.geocode("x")
+    assert geo.calls == 1
+
+
 # --- NominatimGeocoder: response parsing (mocked HTTP) ----------------------
 
 
@@ -123,3 +142,50 @@ def test_nominatim_malformed_response_raises_geocoding_error():
     ):
         with pytest.raises(GeocodingError):
             geo.geocode_once("123 Main St")
+
+
+def test_nominatim_non_list_payload_raises_geocoding_error():
+    # An error envelope (dict) instead of a list must not leak a raw KeyError.
+    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    with patch(
+        "apps.core.geocoding.urllib.request.urlopen",
+        return_value=_urlopen_returning({"error": "Unable to geocode"}),
+    ):
+        with pytest.raises(GeocodingError):
+            geo.geocode_once("bad")
+
+
+def test_nominatim_request_carries_query_and_user_agent():
+    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test-agent", 5)
+    captured = {}
+
+    def fake_urlopen(request, timeout=None):
+        captured["url"] = request.full_url
+        captured["ua"] = request.get_header("User-agent")
+        return _urlopen_returning([{"lat": "1", "lon": "2", "display_name": "x"}])
+
+    with patch("apps.core.geocoding.urllib.request.urlopen", side_effect=fake_urlopen):
+        geo.geocode_once("Main & 5th")
+    assert "format=json" in captured["url"] and "limit=1" in captured["url"]
+    assert "q=Main" in captured["url"]  # address is query-encoded
+    assert captured["ua"] == "Curbfeast/test-agent"  # Nominatim requires this
+
+
+def test_non_http_base_url_is_rejected():
+    with pytest.raises(ImproperlyConfigured):
+        NominatimGeocoder("ftp://evil/search", "Curbfeast/test", 5)
+
+
+def test_unknown_provider_raises_improperly_configured(settings):
+    settings.GEOCODING_PROVIDER = "bogus"
+    with pytest.raises(ImproperlyConfigured):
+        _build_geocoder()
+
+
+def test_module_level_geocode_uses_default_client():
+    body = [{"lat": "39.1", "lon": "-94.6", "display_name": "KC"}]
+    with patch(
+        "apps.core.geocoding.urllib.request.urlopen",
+        return_value=_urlopen_returning(body),
+    ):
+        assert geocode("Kansas City") == GeocodeResult(39.1, -94.6, "KC")
