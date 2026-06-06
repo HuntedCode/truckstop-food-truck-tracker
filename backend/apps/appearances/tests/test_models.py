@@ -95,6 +95,25 @@ def test_is_verified_present_false_when_stale():
     assert appearance.is_verified_present is False
 
 
+def test_confirm_present_records_owner_confirmation():
+    owner = TruckFactory().owner
+    appearance = AppearanceFactory()
+    confirmation = appearance.confirm_present(by=owner)
+    appearance.refresh_from_db()
+    assert confirmation.source == PresenceConfirmation.Source.OWNER
+    assert confirmation.kind == PresenceConfirmation.Kind.HERE_NOW
+    assert appearance.last_confirmed_at is not None
+    assert appearance.is_verified_present is True
+
+
+def test_confirm_present_rejected_when_canceled():
+    appearance = AppearanceFactory(status=Appearance.Status.CANCELED)
+    with pytest.raises(ValueError):
+        appearance.confirm_present()
+    appearance.refresh_from_db()
+    assert appearance.last_confirmed_at is None
+
+
 def test_customer_confirmation_does_not_update_last_confirmed_at():
     appearance = AppearanceFactory()
     PresenceConfirmationFactory(

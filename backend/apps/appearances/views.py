@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from apps.core.geo import point_from_latlng
 from apps.core.permissions import IsOwnerRole
 
-from .models import Appearance, PresenceConfirmation
+from .models import Appearance
 from .serializers import AppearanceSerializer, AppearanceWriteSerializer
 
 DEFAULT_RADIUS_KM = 5.0
@@ -77,17 +77,12 @@ class OwnerAppearanceViewSet(viewsets.ModelViewSet):
     def confirm(self, request, pk=None):
         """Owner 'I'm here now'. Optional latitude/longitude of where they are."""
         appearance = self.get_object()
-        if appearance.status != Appearance.Status.SCHEDULED:
-            raise ValidationError("Only scheduled appearances can be confirmed.")
         point = point_from_latlng(
             request.data.get("latitude"), request.data.get("longitude")
         )
-        PresenceConfirmation.objects.create(
-            appearance=appearance,
-            confirmed_by=request.user,
-            source=PresenceConfirmation.Source.OWNER,
-            kind=PresenceConfirmation.Kind.HERE_NOW,
-            point=point,
-        )
+        try:
+            appearance.confirm_present(by=request.user, point=point)
+        except ValueError as exc:
+            raise ValidationError(str(exc))
         appearance.refresh_from_db()
         return Response(AppearanceSerializer(appearance).data)

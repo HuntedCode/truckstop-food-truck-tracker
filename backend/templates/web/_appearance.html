@@ -1,0 +1,38 @@
+{% load tz %}
+{% comment %}One appearance card. Expects `a` (appearance) and `truck`. Rendered
+in the manage list and returned standalone by the "I'm here now" HTMX swap.{% endcomment %}
+<div class="bg-surface border border-border rounded-2xl p-4" id="appearance-{{ a.pk }}">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <div class="font-medium">{{ a.location_name|default:a.address }}</div>
+      {% if a.location_name %}<div class="text-sm text-ink-muted">{{ a.address }}</div>{% endif %}
+      <div class="text-sm text-ink-muted mt-1">
+        {% timezone truck.timezone %}{{ a.start_at|date:"D, M j" }} · {{ a.start_at|date:"g:i A" }} &ndash; {{ a.end_at|date:"g:i A" }}{% endtimezone %}
+      </div>
+      {% if a.is_verified_present %}
+        <div class="text-sm text-status-here font-medium mt-1">● Live since {% timezone truck.timezone %}{{ a.last_confirmed_at|date:"g:i A" }}{% endtimezone %}</div>
+      {% endif %}
+    </div>
+    <span class="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap
+      {% if a.status == 'CANCELED' %}bg-status-away/15 text-ink-muted
+      {% elif a.is_live %}bg-status-here/15 text-status-here
+      {% else %}bg-status-soon/15 text-status-soon-strong{% endif %}">
+      {% if a.status == 'CANCELED' %}Canceled{% elif a.is_live %}● Live now{% else %}Scheduled{% endif %}
+    </span>
+  </div>
+  {% if a.status != 'CANCELED' %}
+  <div class="mt-3 flex items-center justify-end gap-2">
+    {% if a.is_live %}
+      <button hx-post="{% url 'appearance-confirm' a.pk %}" hx-target="#appearance-{{ a.pk }}" hx-swap="outerHTML"
+        class="text-sm font-medium rounded-lg bg-accent text-ink px-3 py-1.5 hover:bg-accent-dark transition-colors">
+        {% if a.is_verified_present %}Still here{% else %}I'm here now{% endif %}
+      </button>
+    {% endif %}
+    <form method="post" action="{% url 'appearance-cancel' a.pk %}" onsubmit="return confirm('Cancel this appearance?');">
+      {% csrf_token %}
+      <button class="text-sm font-medium rounded-lg border border-border text-ink-muted px-3 py-1.5 hover:bg-base transition-colors">Cancel</button>
+    </form>
+    <a href="{% url 'appearance-edit' a.pk %}" class="text-sm font-medium rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Edit</a>
+  </div>
+  {% endif %}
+</div>

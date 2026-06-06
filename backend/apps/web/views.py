@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import login
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, TemplateView
@@ -240,6 +240,33 @@ class AppearanceCancelView(OwnerRequiredMixin, View):
         appearance.status = Appearance.Status.CANCELED
         appearance.save(update_fields=["status", "updated_at"])
         messages.success(request, "Appearance canceled.")
+        return redirect("truck-manage", slug=appearance.truck.slug)
+
+
+class AppearanceConfirmView(OwnerRequiredMixin, View):
+    """Owner "I'm here now". Returns the re-rendered appearance card for an HTMX
+    swap, or redirects to the manage page for a plain (no-JS) POST. POST-only."""
+
+    def post(self, request, pk):
+        appearance = get_object_or_404(
+            Appearance.objects.filter(truck__owner=request.user).select_related(
+                "truck"
+            ),
+            pk=pk,
+        )
+        try:
+            appearance.confirm_present(by=request.user)
+        except ValueError:
+            messages.error(request, "That appearance can no longer be confirmed.")
+            return redirect("truck-manage", slug=appearance.truck.slug)
+        appearance.refresh_from_db()
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "web/_appearance.html",
+                {"a": appearance, "truck": appearance.truck},
+            )
+        messages.success(request, "You're marked as here now.")
         return redirect("truck-manage", slug=appearance.truck.slug)
 
 

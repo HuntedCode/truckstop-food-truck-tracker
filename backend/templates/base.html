@@ -16,7 +16,7 @@
         extend: {
           colors: {
             primary: 'var(--color-primary)', 'primary-dark': 'var(--color-primary-dark)',
-            accent: '#F6A623', base: '#FFF8F0', surface: '#FFFFFF',
+            accent: '#F6A623', 'accent-dark': '#D98911', base: '#FFF8F0', surface: '#FFFFFF',
             ink: '#2B2118', 'ink-muted': '#6B5D50', border: '#E7DDD2',
             'status-here': '#2E7D54', 'status-soon': '#F2A900', 'status-soon-strong': '#8A5300', 'status-away': '#9A8C7D',
             error: '#D7382B',
@@ -44,7 +44,7 @@
     }
   </style>
 </head>
-<body class="h-full bg-base text-ink font-sans">
+<body class="h-full bg-base text-ink font-sans" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <header class="bg-surface border-b border-border">
     <div class="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
       <a href="{% url 'home' %}" class="font-display text-xl font-bold tracking-tight text-primary">Curbfeast</a>

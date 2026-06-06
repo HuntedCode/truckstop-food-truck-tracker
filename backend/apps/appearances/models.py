@@ -91,6 +91,20 @@ class Appearance(TimeStampedModel):
         window = getattr(settings, "PRESENCE_FRESHNESS_WINDOW", timedelta(hours=2))
         return timezone.now() - self.last_confirmed_at <= window
 
+    def confirm_present(self, by=None, point=None):
+        """Record an owner "I'm here now". Single source of truth for the
+        presence confirmation, shared by the API and the web dashboard. Raises
+        ValueError if the appearance is not currently confirmable."""
+        if self.status != self.Status.SCHEDULED:
+            raise ValueError("Only scheduled appearances can be confirmed.")
+        return PresenceConfirmation.objects.create(
+            appearance=self,
+            confirmed_by=by,
+            source=PresenceConfirmation.Source.OWNER,
+            kind=PresenceConfirmation.Kind.HERE_NOW,
+            point=point,
+        )
+
 
 class PresenceConfirmation(TimeStampedModel):
     """The confirmation log. MVP records owner "I'm here now"; extends to

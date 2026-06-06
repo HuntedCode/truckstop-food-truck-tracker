@@ -199,3 +199,72 @@ def test_cancel_another_owners_appearance_404(client):
         client.post(reverse("appearance-cancel", args=[appearance.pk])).status_code
         == 404
     )
+
+
+# --- "I'm here now" confirm -------------------------------------------------
+
+
+def test_htmx_confirm_returns_updated_card(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    appearance = AppearanceFactory(truck=truck)  # live by default
+    client.force_login(owner)
+    resp = client.post(
+        reverse("appearance-confirm", args=[appearance.pk]), HTTP_HX_REQUEST="true"
+    )
+    assert resp.status_code == 200
+    assert b"Live since" in resp.content  # the swapped-in confirmed state
+    appearance.refresh_from_db()
+    assert appearance.is_verified_present is True
+
+
+def test_plain_confirm_redirects_to_manage(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    appearance = AppearanceFactory(truck=truck)
+    client.force_login(owner)
+    resp = client.post(reverse("appearance-confirm", args=[appearance.pk]))
+    assert resp.status_code == 302
+    assert resp.url == reverse("truck-manage", args=[truck.slug])
+    appearance.refresh_from_db()
+    assert appearance.is_verified_present is True
+
+
+def test_confirm_canceled_appearance_is_rejected(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    appearance = AppearanceFactory(truck=truck, status=Appearance.Status.CANCELED)
+    client.force_login(owner)
+    resp = client.post(reverse("appearance-confirm", args=[appearance.pk]))
+    assert resp.status_code == 302  # redirected with an error message
+    appearance.refresh_from_db()
+    assert appearance.last_confirmed_at is None
+
+
+def test_confirm_requires_post(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    appearance = AppearanceFactory(truck=truck)
+    client.force_login(owner)
+    assert (
+        client.get(reverse("appearance-confirm", args=[appearance.pk])).status_code
+        == 405
+    )
+
+
+def test_confirm_forbidden_for_customer(client):
+    appearance = AppearanceFactory()
+    client.force_login(UserFactory())
+    assert (
+        client.post(reverse("appearance-confirm", args=[appearance.pk])).status_code
+        == 403
+    )
+
+
+def test_confirm_another_owners_appearance_404(client):
+    appearance = AppearanceFactory()
+    client.force_login(OwnerFactory())
+    assert (
+        client.post(reverse("appearance-confirm", args=[appearance.pk])).status_code
+        == 404
+    )
