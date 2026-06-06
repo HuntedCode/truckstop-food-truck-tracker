@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
@@ -16,10 +18,13 @@ pytestmark = pytest.mark.django_db
 # Austin, TX, returned by the mocked geocoder (lat, lng).
 _GEO = GeocodeResult(30.2672, -97.7431, "100 Congress Ave, Austin, TX")
 
+# A week out so the window is always in the future (avoids a stale hardcoded date).
+_FUTURE_DATE = (timezone.now() + timedelta(days=7)).date().isoformat()
+
 _VALID_POST = {
     "address": "100 Congress Ave, Austin",
     "location_name": "Downtown",
-    "date": "2026-06-10",
+    "date": _FUTURE_DATE,
     "start_time": "11:00",
     "end_time": "14:00",
 }
@@ -134,6 +139,35 @@ def test_create_rejects_end_before_start(mock_geocode, client):
     )
     assert resp.status_code == 200
     assert truck.appearances.count() == 0
+
+
+@patch("apps.web.forms.geocode", return_value=_GEO)
+def test_create_rejects_past_window(mock_geocode, client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    client.force_login(owner)
+    past = (timezone.now() - timedelta(days=2)).date().isoformat()
+    resp = client.post(
+        reverse("appearance-create", args=[truck.slug]), {**_VALID_POST, "date": past}
+    )
+    assert resp.status_code == 200  # already-over window is rejected
+    assert truck.appearances.count() == 0
+
+
+def test_edit_form_prepopulates_times_in_truck_tz(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, timezone="America/Chicago")
+    tz = ZoneInfo("America/Chicago")
+    appearance = AppearanceFactory(
+        truck=truck,
+        start_at=datetime(2026, 7, 1, 11, 0, tzinfo=tz),
+        end_at=datetime(2026, 7, 1, 14, 0, tzinfo=tz),
+    )
+    client.force_login(owner)
+    content = client.get(
+        reverse("appearance-edit", args=[appearance.pk])
+    ).content.decode()
+    assert "11:00" in content and "14:00" in content  # localized back to Central
 
 
 def test_create_on_another_owners_truck_404(client):
@@ -268,3 +302,33 @@ def test_confirm_another_owners_appearance_404(client):
         client.post(reverse("appearance-confirm", args=[appearance.pk])).status_code
         == 404
     )
+
+
+def test_confirm_future_appearance_rejected(client):
+    """ "Here now" must mean now: a scheduled-but-not-yet-live appearance can't
+    be confirmed even though the owner owns it."""
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    future = AppearanceFactory(
+        truck=truck,
+        start_at=timezone.now() + timedelta(hours=1),
+        end_at=timezone.now() + timedelta(hours=3),
+    )
+    client.force_login(owner)
+    resp = client.post(reverse("appearance-confirm", args=[future.pk]))
+    assert resp.status_code == 302  # error redirect, not a confirmation
+    future.refresh_from_db()
+    assert future.last_confirmed_at is None
+
+
+def test_confirm_is_csrf_protected(client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    appearance = AppearanceFactory(truck=truck)
+    csrf_client = Client(enforce_csrf_checks=True)
+    csrf_client.force_login(owner)
+    # POST without the CSRF token (HTMX normally supplies it via hx-headers).
+    resp = csrf_client.post(reverse("appearance-confirm", args=[appearance.pk]))
+    assert resp.status_code == 403
+    appearance.refresh_from_db()
+    assert appearance.last_confirmed_at is None

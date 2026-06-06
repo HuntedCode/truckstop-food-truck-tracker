@@ -94,9 +94,12 @@ class Appearance(TimeStampedModel):
     def confirm_present(self, by=None, point=None):
         """Record an owner "I'm here now". Single source of truth for the
         presence confirmation, shared by the API and the web dashboard. Raises
-        ValueError if the appearance is not currently confirmable."""
-        if self.status != self.Status.SCHEDULED:
-            raise ValueError("Only scheduled appearances can be confirmed.")
+        ValueError unless the appearance is currently live, "here now" must mean
+        now (this also excludes canceled appearances, which are never live)."""
+        if not self.is_live():
+            raise ValueError(
+                "Presence can only be confirmed during the appearance's window."
+            )
         return PresenceConfirmation.objects.create(
             appearance=self,
             confirmed_by=by,

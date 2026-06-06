@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.core.geo import point_from_latlng
@@ -97,6 +98,8 @@ class AppearanceWriteSerializer(serializers.ModelSerializer):
         end = attrs.get("end_at", getattr(self.instance, "end_at", None))
         if start and end and end <= start:
             raise serializers.ValidationError("end_at must be after start_at.")
+        if end and end <= timezone.now():
+            raise serializers.ValidationError("end_at must be in the future.")
         return attrs
 
     def _build_point(self, validated_data):

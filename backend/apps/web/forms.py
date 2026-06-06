@@ -200,8 +200,16 @@ class AppearanceForm(forms.ModelForm):
             self._end_at = datetime.combine(date, end_time, tzinfo=tz)
             if self._end_at <= self._start_at:
                 self.add_error("end_time", "End time must be after the start time.")
+            elif self._end_at <= timezone.now():
+                self.add_error(
+                    "date",
+                    "That window is already over. Pick an upcoming date and time.",
+                )
+        # Only geocode once the rest of the form is clean: a live network call
+        # (and Nominatim's rate budget) should not be spent on a form that is
+        # already invalid for another reason.
         address = cleaned.get("address")
-        if address:
+        if address and not self.errors:
             try:
                 self._geo = geocode(address)
             except GeocodingError:
@@ -217,6 +225,10 @@ class AppearanceForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
+        # save() runs only after a successful clean(), so these are set; guard
+        # so any future misuse fails loudly instead of with an AttributeError.
+        if self._geo is None or self._start_at is None:
+            raise ValueError("AppearanceForm.save() requires a validated form.")
         appearance = super().save(commit=False)
         appearance.truck = self.truck
         appearance.start_at = self._start_at
