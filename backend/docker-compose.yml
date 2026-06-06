@@ -2,15 +2,15 @@ services:
   db:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_DB: curbfeast
-      POSTGRES_USER: curbfeast
-      POSTGRES_PASSWORD: curbfeast
+      POSTGRES_DB: chuckwagon
+      POSTGRES_USER: chuckwagon
+      POSTGRES_PASSWORD: chuckwagon
     ports:
       - "5438:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U curbfeast"]
+      test: ["CMD-SHELL", "pg_isready -U chuckwagon"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -20,7 +20,7 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
-      DATABASE_URL: postgis://curbfeast:curbfeast@db:5432/curbfeast
+      DATABASE_URL: postgis://chuckwagon:chuckwagon@db:5432/chuckwagon
       SECRET_KEY: django-insecure-dev-only-do-not-use-in-prod
       DEBUG: "True"
     volumes:

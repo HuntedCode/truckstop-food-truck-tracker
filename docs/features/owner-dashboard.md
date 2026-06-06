@@ -43,7 +43,7 @@ Mobile-first; owners post from a phone. (Layout sketches, not final.)
 **Register / Login**
 ```
 +--------------------------------+
-|  Curbfeast   (warm header)     |
+|  Chuckwagon   (warm header)     |
 +--------------------------------+
 |        Run your truck          |
 |                                |
@@ -59,7 +59,7 @@ Mobile-first; owners post from a phone. (Layout sketches, not final.)
 **Dashboard home (one truck)**
 ```
 +--------------------------------+
-|  Curbfeast        [ owner v ]  |
+|  Chuckwagon        [ owner v ]  |
 +--------------------------------+
 |  Taco Loco        [ Active  ]  |  <- status pill
 |  Tacos · ★ Verified            |  <- trust badge

@@ -14,7 +14,7 @@ def _jpeg_with_exif(size=(120, 90)):
     """A JPEG carrying EXIF metadata (stands in for a photo with GPS tags)."""
     image = Image.new("RGB", size, "red")
     exif = Image.Exif()
-    exif[0x0131] = "CurbfeastTestCamera"  # Software tag, round-trips reliably
+    exif[0x0131] = "ChuckwagonTestCamera"  # Software tag, round-trips reliably
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG", exif=exif.tobytes())
     buffer.seek(0)

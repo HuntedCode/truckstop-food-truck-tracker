@@ -1,8 +1,8 @@
-# Curbfeast
+# Chuckwagon
 
 Find your favorite food trucks, on the days you want to enjoy them.
 
-Curbfeast is a two-sided platform that tracks food trucks in the local area. **Truck owners** sign up to promote their business, manage their profile, and post where they'll be and when. **Customers** discover trucks near them, follow the ones they love, and know exactly when and where to find them.
+Chuckwagon is a two-sided platform that tracks food trucks in the local area. **Truck owners** sign up to promote their business, manage their profile, and post where they'll be and when. **Customers** discover trucks near them, follow the ones they love, and know exactly when and where to find them.
 
 ## Concept
 
@@ -15,10 +15,10 @@ Two roles from the foundation up:
 
 ## Architecture
 
-Curbfeast is a **monorepo** with two codebases sharing one backend API:
+Chuckwagon is a **monorepo** with two codebases sharing one backend API:
 
 ```
-Curbfeast/
+Chuckwagon/
   backend/   Django + PostgreSQL + Django REST Framework
              - JSON API (the single source of truth, consumed by everything)
              - Server-rendered web (HTMX): customer site + food truck owner dashboard
@@ -47,7 +47,7 @@ All three surfaces talk to the same DRF API, so adding a richer JS web frontend 
 
 ## Ecosystem
 
-Curbfeast is a standalone product but lives in the shared project ecosystem (see `~/.claude/CLAUDE.md`). It reuses **design thinking and patterns** (not code) from existing projects:
+Chuckwagon is a standalone product but lives in the shared project ecosystem (see `~/.claude/CLAUDE.md`). It reuses **design thinking and patterns** (not code) from existing projects:
 
 - **Django + DRF + HTMX patterns** from PlatPursuit (the web app reference).
 - **React Native patterns** from LongWalk (the mobile reference).

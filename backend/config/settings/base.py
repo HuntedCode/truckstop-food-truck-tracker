@@ -91,7 +91,7 @@ DATABASES = {
     "default": dj_database_url.parse(
         os.getenv(
             "DATABASE_URL",
-            "postgis://curbfeast:curbfeast@localhost:5438/curbfeast",
+            "postgis://chuckwagon:chuckwagon@localhost:5438/chuckwagon",
         ),
         conn_max_age=600,
         conn_health_checks=True,
@@ -179,7 +179,7 @@ PRESENCE_FRESHNESS_WINDOW = timedelta(hours=2)
 # env. Nominatim's usage policy requires a descriptive User-Agent.
 GEOCODING_PROVIDER = os.getenv("GEOCODING_PROVIDER", "nominatim")
 GEOCODING_USER_AGENT = os.getenv(
-    "GEOCODING_USER_AGENT", "Curbfeast/0.1 (+https://curbfeast.com)"
+    "GEOCODING_USER_AGENT", "Chuckwagon/0.1 (+https://chuckwagonapp.com)"
 )
 NOMINATIM_BASE_URL = os.getenv(
     "NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org/search"

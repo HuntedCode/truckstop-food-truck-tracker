@@ -103,7 +103,7 @@ def _urlopen_returning(body):
 
 
 def test_nominatim_parses_top_result():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     body = [{"lat": "40.5", "lon": "-74.1", "display_name": "123 Main St, Town"}]
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
@@ -115,7 +115,7 @@ def test_nominatim_parses_top_result():
 
 
 def test_nominatim_no_results_returns_none():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
         return_value=_urlopen_returning([]),
@@ -124,7 +124,7 @@ def test_nominatim_no_results_returns_none():
 
 
 def test_nominatim_transport_error_raises_geocoding_error():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
         side_effect=urllib.error.URLError("down"),
@@ -134,7 +134,7 @@ def test_nominatim_transport_error_raises_geocoding_error():
 
 
 def test_nominatim_malformed_response_raises_geocoding_error():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     body = [{"display_name": "missing lat/lon"}]
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
@@ -146,7 +146,7 @@ def test_nominatim_malformed_response_raises_geocoding_error():
 
 def test_nominatim_non_list_payload_raises_geocoding_error():
     # An error envelope (dict) instead of a list must not leak a raw KeyError.
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
         return_value=_urlopen_returning({"error": "Unable to geocode"}),
@@ -156,7 +156,7 @@ def test_nominatim_non_list_payload_raises_geocoding_error():
 
 
 def test_nominatim_request_carries_query_and_user_agent():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test-agent", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test-agent", 5)
     captured = {}
 
     def fake_urlopen(request, timeout=None):
@@ -168,12 +168,12 @@ def test_nominatim_request_carries_query_and_user_agent():
         geo.geocode_once("Main & 5th")
     assert "format=json" in captured["url"] and "limit=1" in captured["url"]
     assert "q=Main" in captured["url"]  # address is query-encoded
-    assert captured["ua"] == "Curbfeast/test-agent"  # Nominatim requires this
+    assert captured["ua"] == "Chuckwagon/test-agent"  # Nominatim requires this
 
 
 def test_non_http_base_url_is_rejected():
     with pytest.raises(ImproperlyConfigured):
-        NominatimGeocoder("ftp://evil/search", "Curbfeast/test", 5)
+        NominatimGeocoder("ftp://evil/search", "Chuckwagon/test", 5)
 
 
 def test_unknown_provider_raises_improperly_configured(settings):
@@ -195,7 +195,7 @@ def test_module_level_geocode_uses_default_client():
 
 
 def test_nominatim_search_parses_and_skips_malformed():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     body = [
         {"lat": "30.1", "lon": "-97.1", "display_name": "Austin A"},
         {"display_name": "missing coords"},  # one bad item shouldn't fail it all
@@ -234,7 +234,7 @@ def test_client_search_retries_then_raises():
 
 
 def test_nominatim_search_non_list_returns_empty():
-    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    geo = NominatimGeocoder("http://geo.test/search", "Chuckwagon/test", 5)
     with patch(
         "apps.core.geocoding.urllib.request.urlopen",
         return_value=_urlopen_returning({"error": "unexpected"}),

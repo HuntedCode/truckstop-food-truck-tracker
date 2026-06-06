@@ -1,8 +1,8 @@
-# Curbfeast — Project CLAUDE.md
+# Chuckwagon — Project CLAUDE.md
 
 > This file contains project-specific standards. See `~/.claude/CLAUDE.md` for universal collaboration, workflow, and quality standards that apply across all projects. Those standards (Plan/Build/Polish workflow, audit checklist, lean principles, git workflow, doc maintenance) apply here in full and are not repeated below.
 
-## What Curbfeast Is
+## What Chuckwagon Is
 
 A two-sided platform that tracks local food trucks. **Truck owners** sign up to promote their business and post where/when they'll be. **Customers** discover trucks near them, follow favorites, and know exactly when and where to find them.
 
@@ -34,7 +34,7 @@ Build the **owner vs. customer** role split into the foundation (auth, models, p
 
 > This is an opening ethos to refine in a dedicated design pass, not a finished constitution. PlatPursuit's `docs/design/` shows the eventual bar.
 
-Curbfeast should feel **appetizing, local, lively, and trustworthy**. It celebrates small independent food businesses and the small joy of tracking down a great meal. Warm and energetic, never sterile or corporate. Flavor and local charm are welcome; clarity and "where is my truck right now" always win when they conflict.
+Chuckwagon should feel **appetizing, local, lively, and trustworthy**. It celebrates small independent food businesses and the small joy of tracking down a great meal. Warm and energetic, never sterile or corporate. Flavor and local charm are welcome; clarity and "where is my truck right now" always win when they conflict.
 
 - **Customer surfaces** prioritize speed-to-answer: find a truck, see when/where, go.
 - **Owner surfaces** prioritize low-friction management: post a schedule in seconds from a phone.
@@ -46,7 +46,7 @@ Before building, search these references (read for patterns; do **not** import c
 - **PlatPursuit** (`~/Desktop/PlatPursuit`): Django + DRF + HTMX patterns, view/service organization, resilient external-API consumption (TokenKeeper), template/component conventions, doc structure.
 - **LongWalk** (`~/Desktop/LongWalk`): React Native / Expo project structure, navigation, API-client patterns.
 
-Within Curbfeast, follow the global reuse rule: search for existing utilities/patterns before writing new ones.
+Within Chuckwagon, follow the global reuse rule: search for existing utilities/patterns before writing new ones.
 
 ## External APIs
 

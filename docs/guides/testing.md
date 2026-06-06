@@ -1,6 +1,6 @@
 # Testing Guide
 
-> The testing strategy for Curbfeast. Last updated: 2026-06-04.
+> The testing strategy for Chuckwagon. Last updated: 2026-06-04.
 > Standing rule (see project `CLAUDE.md`): **every code change ships with robust automated tests. Tests are part of "done," not a follow-up.** This complements the audit workflow in the global CLAUDE.md; it does not replace it.
 
 ## Principles

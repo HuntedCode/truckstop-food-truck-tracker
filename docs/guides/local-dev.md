@@ -1,6 +1,6 @@
 # Local Development
 
-> How to run the Curbfeast backend locally. Last updated: 2026-06-05.
+> How to run the Chuckwagon backend locally. Last updated: 2026-06-05.
 > We develop against Docker Compose (Postgres + PostGIS) for production parity and to avoid installing GIS native libraries on the host (especially painful on Windows). See [../architecture/tech-stack.md](../architecture/tech-stack.md).
 
 ## Prerequisites

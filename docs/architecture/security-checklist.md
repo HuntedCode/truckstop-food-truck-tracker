@@ -1,6 +1,6 @@
 # Security Checklist (living)
 
-> One tracked place for Curbfeast's security posture, so forward-looking items
+> One tracked place for Chuckwagon's security posture, so forward-looking items
 > never live only in scattered code comments. Created 2026-06-06.
 > This is a **pre-launch gate**: nothing in "Pending" ships to a public launch
 > unchecked. Update the status as items land. See also

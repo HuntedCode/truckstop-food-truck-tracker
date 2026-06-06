@@ -1,6 +1,6 @@
-# Curbfeast Documentation
+# Chuckwagon Documentation
 
-System documentation for Curbfeast. Per the project standard, when a system's behavior changes, its doc is updated in the same branch. Stale docs are worse than no docs.
+System documentation for Chuckwagon. Per the project standard, when a system's behavior changes, its doc is updated in the same branch. Stale docs are worse than no docs.
 
 ## Categories
 
@@ -20,7 +20,7 @@ System documentation for Curbfeast. Per the project standard, when a system's be
 | [design/roadmap.md](design/roadmap.md) | Phased feature plan: MVP scope and build order, the owner-value SaaS layer, and deferred-but-designed-for features. |
 | [design/backlog.md](design/backlog.md) | Parking lot of nice-to-haves, deliberately out of MVP, so ideas are neither forgotten nor accidentally scope-crept. |
 | [design/design-system.md](design/design-system.md) | Visual foundations: design principles, the Warm Street-Food palette and type as named tokens, spacing, the cold-start imagery rule, customer-vs-owner tone, and core MVP component patterns. |
-| [design/brand-ownership.md](design/brand-ownership.md) | The plan to secure the Curbfeast name: domain, social handles, trademark (intent-to-use, classes), and app-store names, tiered by urgency with open decisions. |
+| [design/brand-ownership.md](design/brand-ownership.md) | The plan to secure the Chuckwagon name: domain, social handles, trademark (intent-to-use, classes), and app-store names, tiered by urgency with open decisions. |
 | [design/logo-brief.md](design/logo-brief.md) | Self-contained logo & identity brief for a designer: brand story, two-tempo feeling, mark concept, deliverables, exact colors/type, and do's/don'ts. |
 | [architecture/tech-stack.md](architecture/tech-stack.md) | Locked technical decisions: PostGIS/GeoDjango, MapLibre + geocoding wrapper, Render hosting, role split, and the cost model. |
 | [architecture/data-model.md](architecture/data-model.md) | The MVP data model: User/role, Truck, Appearance (point + time), PresenceConfirmation, Follow, EngagementEvent, plus auth, permissions, the "near me" query, and designed-for-later entities. |
