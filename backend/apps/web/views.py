@@ -1,14 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
+from apps.appearances.models import Appearance
 from apps.trucks.models import Truck
 
-from .forms import OwnerRegistrationForm, TruckForm, TruckVerificationForm
+from .forms import (
+    AppearanceForm,
+    OwnerRegistrationForm,
+    TruckForm,
+    TruckVerificationForm,
+)
 from .mixins import OwnerRequiredMixin
 
 
@@ -141,6 +147,100 @@ class TruckStatusToggleView(OwnerRequiredMixin, View):
         truck.save(update_fields=["status", "updated_at"])
         messages.success(request, message)
         return redirect("dashboard")
+
+
+class TruckManageView(OwnerRequiredMixin, DetailView):
+    """A truck's home: its upcoming appearances and the actions on them."""
+
+    template_name = "web/truck_manage.html"
+    context_object_name = "truck"
+
+    def get_queryset(self):
+        return self.request.user.trucks.select_related("primary_cuisine")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["appearances"] = self.object.appearances.upcoming().order_by("start_at")
+        return ctx
+
+
+class AppearanceCreateView(OwnerRequiredMixin, CreateView):
+    model = Appearance
+    form_class = AppearanceForm
+    template_name = "web/appearance_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # Owner gate first; then resolve the truck (owner-scoped, so another
+        # owner's slug 404s) for the form and redirect target.
+        if request.user.is_authenticated and request.user.is_owner:
+            self.truck = get_object_or_404(request.user.trucks, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["truck"] = self.truck
+        return kwargs
+
+    def get_success_url(self):
+        return reverse("truck-manage", args=[self.truck.slug])
+
+    def form_valid(self, form):
+        messages.success(self.request, "Appearance posted.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["truck"] = self.truck
+        ctx["title"] = "Post an appearance"
+        ctx["submit_label"] = "Post appearance"
+        return ctx
+
+
+class AppearanceUpdateView(OwnerRequiredMixin, UpdateView):
+    model = Appearance
+    form_class = AppearanceForm
+    template_name = "web/appearance_form.html"
+
+    def get_queryset(self):
+        # Scope to the owner's appearances via the truck: 404 for others.
+        return Appearance.objects.filter(truck__owner=self.request.user).select_related(
+            "truck"
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["truck"] = self.object.truck
+        return kwargs
+
+    def get_success_url(self):
+        return reverse("truck-manage", args=[self.object.truck.slug])
+
+    def form_valid(self, form):
+        messages.success(self.request, "Appearance updated.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["truck"] = self.object.truck
+        ctx["title"] = "Edit appearance"
+        ctx["submit_label"] = "Save changes"
+        return ctx
+
+
+class AppearanceCancelView(OwnerRequiredMixin, View):
+    """Cancel an appearance. POST-only, owner-scoped."""
+
+    def post(self, request, pk):
+        appearance = get_object_or_404(
+            Appearance.objects.filter(truck__owner=request.user).select_related(
+                "truck"
+            ),
+            pk=pk,
+        )
+        appearance.status = Appearance.Status.CANCELED
+        appearance.save(update_fields=["status", "updated_at"])
+        messages.success(request, "Appearance canceled.")
+        return redirect("truck-manage", slug=appearance.truck.slug)
 
 
 # Single source for the style-guide swatches; mirrors the design-system tokens.

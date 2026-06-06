@@ -1,10 +1,28 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
 from django.contrib.auth.password_validation import validate_password
+from django.utils import timezone
 
 from apps.accounts.models import User
+from apps.appearances.models import Appearance
+from apps.core.geo import point_from_latlng
+from apps.core.geocoding import GeocodingError, geocode
 from apps.core.validators import validate_image_size, validate_processable_image
 from apps.trucks.models import Cuisine, Truck, TruckVerification
+
+# US-first (see cross-cutting-concerns); the wrapper stores the IANA key.
+US_TIMEZONE_CHOICES = [
+    ("America/New_York", "Eastern (New York)"),
+    ("America/Chicago", "Central (Chicago)"),
+    ("America/Denver", "Mountain (Denver)"),
+    ("America/Phoenix", "Mountain, no DST (Phoenix)"),
+    ("America/Los_Angeles", "Pacific (Los Angeles)"),
+    ("America/Anchorage", "Alaska (Anchorage)"),
+    ("Pacific/Honolulu", "Hawaii (Honolulu)"),
+]
 
 
 class OwnerRegistrationForm(forms.Form):
@@ -70,16 +88,21 @@ class TruckForm(forms.ModelForm):
     pausing are deliberate dashboard actions (TruckStatusToggleView), separate
     from editing.
 
-    This is a deliberate subset of the API's TruckWriteSerializer: timezone and
-    accepts_catering_inquiries are intentionally omitted for now. timezone will
-    be surfaced with the appearance flow (chunk 4), where it actually drives the
-    live/soon derivation; catering is a later-phase feature."""
+    accepts_catering_inquiries is intentionally omitted for now (a later-phase
+    feature). timezone is included here because it sets the clock that the
+    appearance times are entered and read in."""
 
     logo = forms.ImageField(
         required=False, validators=[validate_image_size, validate_processable_image]
     )
     hero_image = forms.ImageField(
         required=False, validators=[validate_image_size, validate_processable_image]
+    )
+    timezone = forms.ChoiceField(
+        choices=US_TIMEZONE_CHOICES,
+        label="Time zone",
+        required=False,
+        initial="America/Chicago",
     )
 
     class Meta:
@@ -94,6 +117,7 @@ class TruckForm(forms.ModelForm):
             "website",
             "phone",
             "instagram",
+            "timezone",
         ]
         widgets = {"description": forms.Textarea(attrs={"rows": 3})}
 
@@ -103,6 +127,10 @@ class TruckForm(forms.ModelForm):
         active = Cuisine.objects.filter(is_active=True)
         self.fields["primary_cuisine"].queryset = active
         self.fields["cuisine_tags"].queryset = active
+
+    def clean_timezone(self):
+        # Fall back to Central (the model default) if somehow left blank.
+        return self.cleaned_data.get("timezone") or "America/Chicago"
 
 
 class TruckVerificationForm(forms.ModelForm):
@@ -126,3 +154,77 @@ class TruckVerificationForm(forms.ModelForm):
         if not cleaned.get("evidence_image") and not note:
             raise forms.ValidationError("Provide an evidence image or a note.")
         return cleaned
+
+
+class AppearanceForm(forms.ModelForm):
+    """Post/edit where and when a truck will be. The owner enters a plain address
+    (geocoded to coordinates on save, per ADR 0003) and a date + time window in
+    the truck's own time zone, which is stored as absolute (UTC) datetimes."""
+
+    date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    start_time = forms.TimeField(
+        label="From", widget=forms.TimeInput(attrs={"type": "time"})
+    )
+    end_time = forms.TimeField(
+        label="To", widget=forms.TimeInput(attrs={"type": "time"})
+    )
+
+    class Meta:
+        model = Appearance
+        fields = ["address", "location_name"]
+        labels = {"location_name": "Place name (optional)"}
+
+    def __init__(self, *args, truck=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # truck comes from the create view; on edit it rides on the instance.
+        self.truck = truck if truck is not None else self.instance.truck
+        self._start_at = None
+        self._end_at = None
+        self._geo = None
+        if self.instance and self.instance.pk:
+            tz = ZoneInfo(self.truck.timezone)
+            local_start = timezone.localtime(self.instance.start_at, tz)
+            local_end = timezone.localtime(self.instance.end_at, tz)
+            self.initial.setdefault("date", local_start.date())
+            self.initial.setdefault("start_time", local_start.time())
+            self.initial.setdefault("end_time", local_end.time())
+
+    def clean(self):
+        cleaned = super().clean()
+        date = cleaned.get("date")
+        start_time = cleaned.get("start_time")
+        end_time = cleaned.get("end_time")
+        if date and start_time and end_time:
+            tz = ZoneInfo(self.truck.timezone)
+            self._start_at = datetime.combine(date, start_time, tzinfo=tz)
+            self._end_at = datetime.combine(date, end_time, tzinfo=tz)
+            if self._end_at <= self._start_at:
+                self.add_error("end_time", "End time must be after the start time.")
+        address = cleaned.get("address")
+        if address:
+            try:
+                self._geo = geocode(address)
+            except GeocodingError:
+                self.add_error(
+                    "address", "We couldn't reach the map service. Please try again."
+                )
+            else:
+                if self._geo is None:
+                    self.add_error(
+                        "address",
+                        "We couldn't find that address. Try adding more detail.",
+                    )
+        return cleaned
+
+    def save(self, commit=True):
+        appearance = super().save(commit=False)
+        appearance.truck = self.truck
+        appearance.start_at = self._start_at
+        appearance.end_at = self._end_at
+        # The geocoded point is a starting guess; an owner pin-drop confirmation
+        # (coordinates_confirmed) is a later step (see ADR 0003).
+        appearance.location = point_from_latlng(self._geo.latitude, self._geo.longitude)
+        appearance.coordinates_confirmed = False
+        if commit:
+            appearance.save()
+        return appearance

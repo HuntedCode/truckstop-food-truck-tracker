@@ -15,7 +15,7 @@
       {% with state=truck.lifecycle_state %}
       <div class="flex items-center justify-between gap-3">
         <div>
-          <div class="font-display font-semibold text-lg">{{ truck.name }}</div>
+          <a href="{% url 'truck-manage' truck.slug %}" class="font-display font-semibold text-lg hover:text-primary">{{ truck.name }}</a>
           <div class="text-sm text-ink-muted">{{ truck.primary_cuisine.name|default:"No cuisine yet" }}</div>
         </div>
         {# One composite "where am I" status; the raw DRAFT label is never shown #}

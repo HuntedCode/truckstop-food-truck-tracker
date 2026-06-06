@@ -5,10 +5,14 @@ from django.views.generic import RedirectView
 
 from .forms import EmailAuthenticationForm
 from .views import (
+    AppearanceCancelView,
+    AppearanceCreateView,
+    AppearanceUpdateView,
     DashboardHomeView,
     RegisterView,
     StyleGuideView,
     TruckCreateView,
+    TruckManageView,
     TruckStatusToggleView,
     TruckUpdateView,
     TruckVerifyView,
@@ -45,6 +49,26 @@ urlpatterns = [
         "dashboard/truck/<slug:slug>/verify/",
         TruckVerifyView.as_view(),
         name="truck-verify",
+    ),
+    path(
+        "dashboard/truck/<slug:slug>/manage/",
+        TruckManageView.as_view(),
+        name="truck-manage",
+    ),
+    path(
+        "dashboard/truck/<slug:slug>/appearance/new/",
+        AppearanceCreateView.as_view(),
+        name="appearance-create",
+    ),
+    path(
+        "dashboard/appearance/<int:pk>/edit/",
+        AppearanceUpdateView.as_view(),
+        name="appearance-edit",
+    ),
+    path(
+        "dashboard/appearance/<int:pk>/cancel/",
+        AppearanceCancelView.as_view(),
+        name="appearance-cancel",
     ),
 ]
 

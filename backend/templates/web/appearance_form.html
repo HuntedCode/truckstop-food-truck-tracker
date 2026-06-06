@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Curbfeast{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto">
+  <a href="{% url 'truck-manage' truck.slug %}" class="text-sm text-ink-muted hover:text-ink">&larr; Back to {{ truck.name }}</a>
+  <h1 class="font-display text-2xl font-bold mb-1 mt-3">{{ title }}</h1>
+  <p class="text-ink-muted mb-6">Date and times are in your truck's time zone ({{ truck.timezone }}).</p>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {% include "web/_form_fields.html" %}
+    <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg py-2.5 transition-colors">
+      {{ submit_label }}
+    </button>
+  </form>
+</div>
+{% endblock %}
