@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import login
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -274,9 +275,27 @@ class AppearanceConfirmView(OwnerRequiredMixin, View):
 
 class AppearanceAddressSearchView(OwnerRequiredMixin, View):
     """HTMX address search for the appearance form: returns a short list of
-    matches to pick from, so owners aren't typing a raw address blind."""
+    matches to pick from, so owners aren't typing a raw address blind.
+
+    Per-user throttled, each call proxies to a shared, rate-limited geocoding
+    service, so one owner can't burn our quota for everyone. (A distributed
+    throttle is the pre-launch item; see docs/architecture/security-checklist.md.)
+    """
+
+    THROTTLE_LIMIT = 20  # searches per window, per user
+    THROTTLE_WINDOW = 60  # seconds
 
     def get(self, request):
+        if self._is_throttled(request.user):
+            return render(
+                request,
+                "web/_address_results.html",
+                {
+                    "searched": True,
+                    "results": [],
+                    "error": "Too many searches. Wait a moment and try again.",
+                },
+            )
         query = request.GET.get("address", "").strip()
         context = {"searched": bool(query), "results": [], "error": None}
         if query:
@@ -285,6 +304,19 @@ class AppearanceAddressSearchView(OwnerRequiredMixin, View):
             except GeocodingError:
                 context["error"] = "Address search is unavailable right now. Try again."
         return render(request, "web/_address_results.html", context)
+
+    def _is_throttled(self, user):
+        # Fixed-window counter in the cache. incr() does not reset the TTL, so
+        # the window is a true THROTTLE_WINDOW seconds.
+        key = f"geocode-search-throttle:{user.pk}"
+        if cache.add(key, 1, self.THROTTLE_WINDOW):
+            return False
+        try:
+            return cache.incr(key) > self.THROTTLE_LIMIT
+        except ValueError:
+            # Expired between add and incr: count this as a fresh window.
+            cache.add(key, 1, self.THROTTLE_WINDOW)
+            return False
 
 
 # Single source for the style-guide swatches; mirrors the design-system tokens.

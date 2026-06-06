@@ -31,7 +31,7 @@ Three layers, not one:
 | Item | Risk | Trigger | Notes |
 |---|---|---|---|
 | **Private storage + signed URLs for verification evidence** | Permits/licenses/faces (PII) are served from public `/media/` | Before collecting any real evidence | Move `default` storage for `verifications/` to a private bucket with short-lived signed URLs. Highest-priority pending item. |
-| **Rate-limit the HTML auth forms** | Brute force / credential stuffing / mass signup (DRF throttles don't cover `/accounts/login` + `/accounts/register`) | Before public launch | e.g. `django-axes` or `django-ratelimit`. |
+| **Rate-limit the HTML (non-DRF) views** | Brute force / credential stuffing / mass signup on `/accounts/login` + `/accounts/register` (DRF throttles don't reach plain Django views) | Before public launch | e.g. `django-axes` or `django-ratelimit`. The geocode-search proxy already has a basic per-user cache throttle; this item is the robust, distributed version (shared cache) across all non-DRF endpoints. |
 | **SRI or self-host CDN scripts** | Supply-chain script injection via the Tailwind + HTMX CDNs | Before public launch (pairs with the prod CSS build) | Vendor the scripts into `static/` or add Subresource Integrity hashes. |
 | **Content Security Policy headers** | XSS hardening / limit inline-script blast radius | Before public launch | Pairs with vendoring the CDN scripts. |
 | **Email verification + password reset** | Account validity; self-service recovery | Before public launch | Confirm the flows are wired (cross-cutting assumes they ship with auth). |

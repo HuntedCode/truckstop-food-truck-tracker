@@ -3,6 +3,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -399,3 +400,43 @@ def test_picked_coords_out_of_range_rejected(mock_geocode, client):
     )
     assert resp.status_code == 200
     assert truck.appearances.count() == 0
+
+
+@patch("apps.web.forms.geocode", return_value=_GEO)
+def test_latitude_without_longitude_falls_back_to_geocode(mock_geocode, client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    client.force_login(owner)
+    resp = client.post(
+        reverse("appearance-create", args=[truck.slug]),
+        {**_VALID_POST, "latitude": "30.2672"},  # longitude missing -> half-point
+    )
+    assert resp.status_code == 302
+    mock_geocode.assert_called_once()  # didn't build a bad point; geocoded instead
+    assert truck.appearances.get().location.y == pytest.approx(30.2672)
+
+
+@patch(
+    "apps.web.views.geocode_search",
+    return_value=[GeocodeResult(30.0, -97.0, '"><script>alert(1)</script>')],
+)
+def test_address_search_escapes_display_name(mock_search, client):
+    client.force_login(OwnerFactory())
+    content = client.get(reverse("address-search"), {"address": "x"}).content.decode()
+    assert "<script>alert(1)</script>" not in content  # not rendered raw
+    assert "&lt;script&gt;" in content  # escaped instead
+
+
+def test_address_search_is_rate_limited(client, monkeypatch):
+    from apps.web.views import AppearanceAddressSearchView
+
+    cache.clear()
+    monkeypatch.setattr(AppearanceAddressSearchView, "THROTTLE_LIMIT", 2)
+    client.force_login(OwnerFactory())
+    url = reverse("address-search")
+    with patch("apps.web.views.geocode_search", return_value=[]):
+        first = client.get(url, {"address": "a"})
+        client.get(url, {"address": "a"})
+        third = client.get(url, {"address": "a"})  # over the limit
+    assert b"Too many searches" not in first.content
+    assert b"Too many searches" in third.content

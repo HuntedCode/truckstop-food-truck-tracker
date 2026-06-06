@@ -231,3 +231,12 @@ def test_client_search_retries_then_raises():
     client = GeocodingClient(geocoder=_Down(), max_retries=1, sleep=lambda s: None)
     with pytest.raises(GeocodingError):
         client.search("x")
+
+
+def test_nominatim_search_non_list_returns_empty():
+    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    with patch(
+        "apps.core.geocoding.urllib.request.urlopen",
+        return_value=_urlopen_returning({"error": "unexpected"}),
+    ):
+        assert geo.search("x", 5) == []
