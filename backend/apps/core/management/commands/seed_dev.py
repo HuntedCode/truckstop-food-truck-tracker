@@ -37,6 +37,7 @@ class Command(BaseCommand):
         self._ensure_trucks(owner, cuisines)
         self.stdout.write(self.style.SUCCESS("Seed complete."))
         self.stdout.write(f"  Admin login: {admin.email} / admin12345")
+        self.stdout.write(f"  Owner login: {owner.email} / owner12345")
 
     def _ensure_admin(self):
         admin, created = User.objects.get_or_create(
@@ -84,7 +85,7 @@ class Command(BaseCommand):
     def _ensure_trucks(self, owner, cuisines):
         now = timezone.now()
         for name, cuisine_name, (lng, lat) in SAMPLE_TRUCKS:
-            truck, created = Truck.objects.get_or_create(
+            truck, _ = Truck.objects.get_or_create(
                 name=name,
                 defaults={
                     "owner": owner,
@@ -94,13 +95,30 @@ class Command(BaseCommand):
                     "timezone": "America/Chicago",
                 },
             )
-            if created:
-                Appearance.objects.create(
-                    truck=truck,
-                    location=Point(lng, lat, srid=4326),
-                    address=f"{name} spot, Austin TX",
-                    location_name="Downtown Austin",
-                    coordinates_confirmed=True,
-                    start_at=now - timedelta(hours=1),
-                    end_at=now + timedelta(hours=3),
-                )
+            # Refresh (or create) a currently-live appearance on every run so the
+            # manage page and the "I'm here now" button always have something to
+            # act on, even if the truck was seeded days ago.
+            Appearance.objects.update_or_create(
+                truck=truck,
+                location_name="Downtown Austin",
+                defaults={
+                    "location": Point(lng, lat, srid=4326),
+                    "address": f"{name} spot, Austin TX",
+                    "coordinates_confirmed": True,
+                    "status": Appearance.Status.SCHEDULED,
+                    "start_at": now - timedelta(hours=1),
+                    "end_at": now + timedelta(hours=3),
+                },
+            )
+        # A truck mid-setup, so the activation pipeline (Get verified -> approve
+        # -> go live) is testable end to end, not just the happy path.
+        Truck.objects.get_or_create(
+            name="Fresh Start",
+            defaults={
+                "owner": owner,
+                "primary_cuisine": cuisines["Vegan"],
+                "status": Truck.Status.DRAFT,
+                "verification_status": Truck.VerificationStatus.UNVERIFIED,
+                "timezone": "America/Chicago",
+            },
+        )
