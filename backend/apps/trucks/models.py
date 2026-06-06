@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
+from apps.core.images import ProcessedImageField
 from apps.core.models import TimeStampedModel
 
 
@@ -50,8 +51,8 @@ class Truck(TimeStampedModel):
         Cuisine, blank=True, related_name="tagged_trucks"
     )
     description = models.TextField(blank=True)
-    logo = models.ImageField(upload_to="trucks/logos/", null=True, blank=True)
-    hero_image = models.ImageField(upload_to="trucks/heroes/", null=True, blank=True)
+    logo = ProcessedImageField(upload_to="trucks/logos/", null=True, blank=True)
+    hero_image = ProcessedImageField(upload_to="trucks/heroes/", null=True, blank=True)
     timezone = models.CharField(max_length=64, default="America/Chicago")
     website = models.URLField(blank=True)
     phone = models.CharField(max_length=32, blank=True)
@@ -166,7 +167,7 @@ class TruckVerification(TimeStampedModel):
         Truck, on_delete=models.CASCADE, related_name="verifications"
     )
     method = models.CharField(max_length=12, choices=Method.choices)
-    evidence_image = models.ImageField(
+    evidence_image = ProcessedImageField(
         upload_to="verifications/", null=True, blank=True
     )
     evidence_note = models.TextField(blank=True)
