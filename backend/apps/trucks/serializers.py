@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.core.validators import validate_image_size
+from apps.core.validators import validate_image_size, validate_processable_image
 
 from .models import Cuisine, Truck, TruckVerification
 
@@ -45,10 +45,14 @@ class TruckWriteSerializer(serializers.ModelSerializer):
     slug and verification_status are managed server-side."""
 
     logo = serializers.ImageField(
-        required=False, allow_null=True, validators=[validate_image_size]
+        required=False,
+        allow_null=True,
+        validators=[validate_image_size, validate_processable_image],
     )
     hero_image = serializers.ImageField(
-        required=False, allow_null=True, validators=[validate_image_size]
+        required=False,
+        allow_null=True,
+        validators=[validate_image_size, validate_processable_image],
     )
 
     class Meta:
@@ -77,7 +81,9 @@ class VerificationSubmitSerializer(serializers.ModelSerializer):
     """An owner submits evidence for review (status starts PENDING)."""
 
     evidence_image = serializers.ImageField(
-        required=False, allow_null=True, validators=[validate_image_size]
+        required=False,
+        allow_null=True,
+        validators=[validate_image_size, validate_processable_image],
     )
 
     class Meta:

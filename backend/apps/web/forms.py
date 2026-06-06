@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm, UsernameField
 from django.contrib.auth.password_validation import validate_password
 
 from apps.accounts.models import User
-from apps.core.validators import validate_image_size
+from apps.core.validators import validate_image_size, validate_processable_image
 from apps.trucks.models import Cuisine, Truck, TruckVerification
 
 
@@ -75,8 +75,12 @@ class TruckForm(forms.ModelForm):
     be surfaced with the appearance flow (chunk 4), where it actually drives the
     live/soon derivation; catering is a later-phase feature."""
 
-    logo = forms.ImageField(required=False, validators=[validate_image_size])
-    hero_image = forms.ImageField(required=False, validators=[validate_image_size])
+    logo = forms.ImageField(
+        required=False, validators=[validate_image_size, validate_processable_image]
+    )
+    hero_image = forms.ImageField(
+        required=False, validators=[validate_image_size, validate_processable_image]
+    )
 
     class Meta:
         model = Truck
@@ -107,7 +111,9 @@ class TruckVerificationForm(forms.ModelForm):
     The view hands the cleaned data to Truck.submit_verification (the single
     source of truth for the state transition), so this form only validates."""
 
-    evidence_image = forms.ImageField(required=False, validators=[validate_image_size])
+    evidence_image = forms.ImageField(
+        required=False, validators=[validate_image_size, validate_processable_image]
+    )
 
     class Meta:
         model = TruckVerification
