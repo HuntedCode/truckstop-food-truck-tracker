@@ -168,6 +168,10 @@ class AppearanceForm(forms.ModelForm):
     end_time = forms.TimeField(
         label="To", widget=forms.TimeInput(attrs={"type": "time"})
     )
+    # Filled by the address-search picker; if present we trust the chosen point
+    # and skip re-geocoding. Owners can only place their own truck anyway.
+    latitude = forms.FloatField(required=False, widget=forms.HiddenInput)
+    longitude = forms.FloatField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = Appearance
@@ -180,7 +184,7 @@ class AppearanceForm(forms.ModelForm):
         self.truck = truck if truck is not None else self.instance.truck
         self._start_at = None
         self._end_at = None
-        self._geo = None
+        self._point = None
         if self.instance and self.instance.pk:
             tz = ZoneInfo(self.truck.timezone)
             local_start = timezone.localtime(self.instance.start_at, tz)
@@ -205,37 +209,47 @@ class AppearanceForm(forms.ModelForm):
                     "date",
                     "That window is already over. Pick an upcoming date and time.",
                 )
-        # Only geocode once the rest of the form is clean: a live network call
-        # (and Nominatim's rate budget) should not be spent on a form that is
-        # already invalid for another reason.
+        lat = cleaned.get("latitude")
+        lng = cleaned.get("longitude")
         address = cleaned.get("address")
-        if address and not self.errors:
+        if lat is not None and lng is not None:
+            # Coordinates came from the address picker: trust them (after a range
+            # check) and skip a redundant geocode.
+            if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                self.add_error("address", "That location is invalid. Search again.")
+            else:
+                self._point = point_from_latlng(lat, lng)
+        elif address and not self.errors:
+            # Typed an address without picking: geocode it, but only once the
+            # rest of the form is clean so a bad time field doesn't burn a call.
             try:
-                self._geo = geocode(address)
+                result = geocode(address)
             except GeocodingError:
                 self.add_error(
                     "address", "We couldn't reach the map service. Please try again."
                 )
             else:
-                if self._geo is None:
+                if result is None:
                     self.add_error(
                         "address",
-                        "We couldn't find that address. Try adding more detail.",
+                        "We couldn't find that address. Use Search to pick a match.",
                     )
+                else:
+                    self._point = point_from_latlng(result.latitude, result.longitude)
         return cleaned
 
     def save(self, commit=True):
         # save() runs only after a successful clean(), so these are set; guard
         # so any future misuse fails loudly instead of with an AttributeError.
-        if self._geo is None or self._start_at is None:
+        if self._point is None or self._start_at is None:
             raise ValueError("AppearanceForm.save() requires a validated form.")
         appearance = super().save(commit=False)
         appearance.truck = self.truck
         appearance.start_at = self._start_at
         appearance.end_at = self._end_at
-        # The geocoded point is a starting guess; an owner pin-drop confirmation
+        appearance.location = self._point
+        # The point is a starting guess; an owner pin-drop confirmation
         # (coordinates_confirmed) is a later step (see ADR 0003).
-        appearance.location = point_from_latlng(self._geo.latitude, self._geo.longitude)
         appearance.coordinates_confirmed = False
         if commit:
             appearance.save()

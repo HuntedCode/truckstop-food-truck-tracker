@@ -57,14 +57,14 @@ class NominatimGeocoder:
         self.user_agent = user_agent
         self.timeout = timeout
 
-    def geocode_once(self, address):
-        """One request. Returns a GeocodeResult, or None for no match. Raises
-        GeocodingError on any transport/HTTP/parse failure (retryable upstream).
+    def _fetch(self, limit, address):
+        """Hit Nominatim and return the parsed JSON list. Raises GeocodingError
+        on any transport/HTTP/parse failure (retryable upstream).
 
         Note: Nominatim allows ~1 req/sec and 429s on abuse. That is fine for
-        our single-geocode-per-form-submit use; a batch caller would need
-        throttling and Retry-After handling (deferred)."""
-        query = urllib.parse.urlencode({"q": address, "format": "json", "limit": 1})
+        our deliberate (button-press) use; a batch caller would need throttling
+        and Retry-After handling (deferred)."""
+        query = urllib.parse.urlencode({"q": address, "format": "json", "limit": limit})
         request = urllib.request.Request(
             f"{self.base_url}?{query}", headers={"User-Agent": self.user_agent}
         )
@@ -72,20 +72,47 @@ class NominatimGeocoder:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 body = response.read(MAX_RESPONSE_BYTES)
             payload = json.loads(body.decode("utf-8"))
-            if not payload:
-                return None
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise GeocodingError(f"Nominatim request failed: {exc}") from exc
+        except ValueError as exc:  # truncated/oversized body or non-JSON
+            raise GeocodingError(f"Nominatim response malformed: {exc}") from exc
+        return payload
+
+    def geocode_once(self, address):
+        """One request, best match. GeocodeResult or None; raises GeocodingError
+        on transport/parse failure or a malformed top result."""
+        payload = self._fetch(1, address)
+        if not payload:
+            return None
+        try:
             top = payload[0]
             return GeocodeResult(
                 latitude=float(top["lat"]),
                 longitude=float(top["lon"]),
                 display_name=top.get("display_name", address),
             )
-        except (urllib.error.URLError, TimeoutError) as exc:
-            raise GeocodingError(f"Nominatim request failed: {exc}") from exc
-        except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:
-            # Truncated/oversized body, non-JSON, non-list payload, or missing
-            # fields all collapse to a single "service gave us garbage" failure.
+        except (KeyError, IndexError, TypeError, ValueError, AttributeError) as exc:
             raise GeocodingError(f"Nominatim response malformed: {exc}") from exc
+
+    def search(self, address, limit):
+        """Up to ``limit`` candidate matches for an address-picker. Lenient: a
+        single malformed item is skipped rather than failing the whole search."""
+        payload = self._fetch(limit, address)
+        if not isinstance(payload, list):
+            return []
+        results = []
+        for item in payload[:limit]:
+            try:
+                results.append(
+                    GeocodeResult(
+                        latitude=float(item["lat"]),
+                        longitude=float(item["lon"]),
+                        display_name=item.get("display_name", address),
+                    )
+                )
+            except (KeyError, TypeError, ValueError, AttributeError):
+                continue
+        return results
 
 
 class GeocodingClient:
@@ -101,18 +128,14 @@ class GeocodingClient:
         self.backoff = settings.GEOCODING_BACKOFF if backoff is None else backoff
         self._sleep = sleep
 
-    def geocode(self, address):
-        """Best-match GeocodeResult, or None for a blank address / no match.
-        Raises GeocodingError if the service is unavailable after retries."""
-        if not address or not address.strip():
-            return None
+    def _attempt(self, fn, address):
         # Clamp so a misconfigured negative retry count still makes one attempt
         # and never falls through to `raise None`.
         attempts = max(1, self.max_retries + 1)
         last_exc = None
         for attempt in range(attempts):
             try:
-                return self.geocoder.geocode_once(address.strip())
+                return fn()
             except GeocodingError as exc:
                 last_exc = exc
                 if attempt < attempts - 1:
@@ -124,6 +147,24 @@ class GeocodingClient:
             last_exc,
         )
         raise last_exc
+
+    def geocode(self, address):
+        """Best-match GeocodeResult, or None for a blank address / no match.
+        Raises GeocodingError if the service is unavailable after retries."""
+        if not address or not address.strip():
+            return None
+        return self._attempt(
+            lambda: self.geocoder.geocode_once(address.strip()), address
+        )
+
+    def search(self, address, limit=5):
+        """Up to ``limit`` candidate matches (for the address picker), or an
+        empty list for a blank address. Raises GeocodingError after retries."""
+        if not address or not address.strip():
+            return []
+        return self._attempt(
+            lambda: self.geocoder.search(address.strip(), limit), address
+        )
 
 
 def _build_geocoder():
@@ -140,3 +181,8 @@ def _build_geocoder():
 def geocode(address):
     """Convenience using a default client built from settings."""
     return GeocodingClient().geocode(address)
+
+
+def search(address, limit=5):
+    """Convenience using a default client built from settings."""
+    return GeocodingClient().search(address, limit)

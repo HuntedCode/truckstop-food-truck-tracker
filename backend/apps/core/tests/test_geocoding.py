@@ -189,3 +189,45 @@ def test_module_level_geocode_uses_default_client():
         return_value=_urlopen_returning(body),
     ):
         assert geocode("Kansas City") == GeocodeResult(39.1, -94.6, "KC")
+
+
+# --- search (multi-result, for the address picker) --------------------------
+
+
+def test_nominatim_search_parses_and_skips_malformed():
+    geo = NominatimGeocoder("http://geo.test/search", "Curbfeast/test", 5)
+    body = [
+        {"lat": "30.1", "lon": "-97.1", "display_name": "Austin A"},
+        {"display_name": "missing coords"},  # one bad item shouldn't fail it all
+        {"lat": "30.2", "lon": "-97.2", "display_name": "Austin B"},
+    ]
+    with patch(
+        "apps.core.geocoding.urllib.request.urlopen",
+        return_value=_urlopen_returning(body),
+    ):
+        results = geo.search("austin", 5)
+    assert [r.display_name for r in results] == ["Austin A", "Austin B"]
+
+
+def test_client_search_blank_returns_empty():
+    client = GeocodingClient(geocoder=_FakeGeocoder([]), sleep=lambda s: None)
+    assert client.search("   ") == []
+
+
+def test_client_search_returns_results():
+    class _Searcher:
+        def search(self, address, limit):
+            return [GeocodeResult(1.0, 2.0, "A"), GeocodeResult(3.0, 4.0, "B")]
+
+    client = GeocodingClient(geocoder=_Searcher(), sleep=lambda s: None)
+    assert [r.display_name for r in client.search("x")] == ["A", "B"]
+
+
+def test_client_search_retries_then_raises():
+    class _Down:
+        def search(self, address, limit):
+            raise GeocodingError("down")
+
+    client = GeocodingClient(geocoder=_Down(), max_retries=1, sleep=lambda s: None)
+    with pytest.raises(GeocodingError):
+        client.search("x")

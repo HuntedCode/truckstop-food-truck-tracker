@@ -332,3 +332,70 @@ def test_confirm_is_csrf_protected(client):
     assert resp.status_code == 403
     appearance.refresh_from_db()
     assert appearance.last_confirmed_at is None
+
+
+# --- Address search + pick --------------------------------------------------
+
+
+@patch("apps.web.views.geocode_search", return_value=[_GEO])
+def test_address_search_returns_pickable_results(mock_search, client):
+    client.force_login(OwnerFactory())
+    resp = client.get(reverse("address-search"), {"address": "congress austin"})
+    assert resp.status_code == 200
+    assert b"100 Congress Ave" in resp.content
+    assert b'data-lat="30.2672"' in resp.content  # coords ready for the picker
+
+
+def test_address_search_blank_query_returns_nothing(client):
+    client.force_login(OwnerFactory())
+    resp = client.get(reverse("address-search"), {"address": "   "})
+    assert resp.status_code == 200
+    assert b"data-lat" not in resp.content
+
+
+@patch("apps.web.views.geocode_search", side_effect=GeocodingError("down"))
+def test_address_search_handles_service_down(mock_search, client):
+    client.force_login(OwnerFactory())
+    resp = client.get(reverse("address-search"), {"address": "austin"})
+    assert resp.status_code == 200
+    assert b"unavailable" in resp.content
+
+
+def test_address_search_forbidden_for_customer(client):
+    client.force_login(UserFactory())
+    assert client.get(reverse("address-search"), {"address": "x"}).status_code == 403
+
+
+def test_address_search_requires_login(client):
+    resp = client.get(reverse("address-search"), {"address": "x"})
+    assert resp.status_code == 302
+    assert reverse("login") in resp.url
+
+
+@patch("apps.web.forms.geocode")
+def test_post_appearance_with_picked_coords_skips_geocode(mock_geocode, client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner, timezone="America/Chicago")
+    client.force_login(owner)
+    resp = client.post(
+        reverse("appearance-create", args=[truck.slug]),
+        {**_VALID_POST, "latitude": "30.2672", "longitude": "-97.7431"},
+    )
+    assert resp.status_code == 302
+    mock_geocode.assert_not_called()  # the picked coordinates are used directly
+    appearance = truck.appearances.get()
+    assert appearance.location.y == pytest.approx(30.2672)
+    assert appearance.location.x == pytest.approx(-97.7431)
+
+
+@patch("apps.web.forms.geocode")
+def test_picked_coords_out_of_range_rejected(mock_geocode, client):
+    owner = OwnerFactory()
+    truck = TruckFactory(owner=owner)
+    client.force_login(owner)
+    resp = client.post(
+        reverse("appearance-create", args=[truck.slug]),
+        {**_VALID_POST, "latitude": "999", "longitude": "-97.7"},
+    )
+    assert resp.status_code == 200
+    assert truck.appearances.count() == 0

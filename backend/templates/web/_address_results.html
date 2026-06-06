@@ -1,0 +1,19 @@
+{% comment %}Address-search results for the appearance form (HTMX swap target).
+Expects `results` (GeocodeResult list), `searched` (bool), `error` (str|None).{% endcomment %}
+{% if error %}
+  <p class="text-primary text-sm mt-1">{{ error }}</p>
+{% elif results %}
+  <ul class="border border-border rounded-lg divide-y divide-border mt-1 bg-surface max-h-56 overflow-auto">
+    {% for r in results %}
+    <li>
+      <button type="button" onclick="selectAddress(this)"
+        data-address="{{ r.display_name }}" data-lat="{{ r.latitude }}" data-lng="{{ r.longitude }}"
+        class="block w-full text-left px-3 py-2 text-sm hover:bg-base transition-colors">
+        {{ r.display_name }}
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+{% elif searched %}
+  <p class="text-ink-muted text-sm mt-1">No matches. Add a city and state, then search again.</p>
+{% endif %}

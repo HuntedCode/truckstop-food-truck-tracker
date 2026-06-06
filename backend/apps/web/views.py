@@ -7,6 +7,8 @@ from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from apps.appearances.models import Appearance
+from apps.core.geocoding import GeocodingError
+from apps.core.geocoding import search as geocode_search
 from apps.trucks.models import Truck
 
 from .forms import (
@@ -268,6 +270,21 @@ class AppearanceConfirmView(OwnerRequiredMixin, View):
             )
         messages.success(request, "You're marked as here now.")
         return redirect("truck-manage", slug=appearance.truck.slug)
+
+
+class AppearanceAddressSearchView(OwnerRequiredMixin, View):
+    """HTMX address search for the appearance form: returns a short list of
+    matches to pick from, so owners aren't typing a raw address blind."""
+
+    def get(self, request):
+        query = request.GET.get("address", "").strip()
+        context = {"searched": bool(query), "results": [], "error": None}
+        if query:
+            try:
+                context["results"] = geocode_search(query, limit=6)
+            except GeocodingError:
+                context["error"] = "Address search is unavailable right now. Try again."
+        return render(request, "web/_address_results.html", context)
 
 
 # Single source for the style-guide swatches; mirrors the design-system tokens.

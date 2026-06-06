@@ -8,10 +8,51 @@
 
   <form method="post" class="space-y-4">
     {% csrf_token %}
-    {% include "web/_form_fields.html" %}
+
+    {# Address: type, Search, and pick a match (fills the hidden coordinates). #}
+    <div>
+      <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium mb-1">Address</label>
+      <div class="flex gap-2">
+        {{ form.address }}
+        <button type="button"
+          hx-get="{% url 'address-search' %}"
+          hx-include="[name='address']"
+          hx-target="#address-results"
+          hx-swap="innerHTML"
+          class="shrink-0 font-medium rounded-lg border border-border text-ink px-4 hover:bg-base transition-colors">
+          Search
+        </button>
+      </div>
+      <p class="text-xs text-ink-muted mt-1">Type a street, city, and state, then Search and pick the match.</p>
+      <div id="address-results"></div>
+      {{ form.latitude }}{{ form.longitude }}
+      {% if form.address.errors %}<p class="text-primary text-sm mt-1">{{ form.address.errors|join:" " }}</p>{% endif %}
+    </div>
+
+    {# Everything else (skip the address + hidden coordinate fields). #}
+    {% for field in form %}
+      {% if field.name != "address" and field.name != "latitude" and field.name != "longitude" %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="text-primary text-sm mt-1">{{ field.errors|join:" " }}</p>{% endif %}
+      </div>
+      {% endif %}
+    {% endfor %}
+    {% if form.non_field_errors %}<p class="text-primary text-sm">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+
     <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg py-2.5 transition-colors">
       {{ submit_label }}
     </button>
   </form>
 </div>
+
+<script>
+  function selectAddress(btn) {
+    document.getElementById('{{ form.address.id_for_label }}').value = btn.dataset.address;
+    document.getElementById('{{ form.latitude.id_for_label }}').value = btn.dataset.lat;
+    document.getElementById('{{ form.longitude.id_for_label }}').value = btn.dataset.lng;
+    document.getElementById('address-results').innerHTML = '';
+  }
+</script>
 {% endblock %}

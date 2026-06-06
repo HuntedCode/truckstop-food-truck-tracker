@@ -5,6 +5,7 @@ from django.views.generic import RedirectView
 
 from .forms import EmailAuthenticationForm
 from .views import (
+    AppearanceAddressSearchView,
     AppearanceCancelView,
     AppearanceConfirmView,
     AppearanceCreateView,
@@ -75,6 +76,11 @@ urlpatterns = [
         "dashboard/appearance/<int:pk>/confirm/",
         AppearanceConfirmView.as_view(),
         name="appearance-confirm",
+    ),
+    path(
+        "dashboard/address-search/",
+        AppearanceAddressSearchView.as_view(),
+        name="address-search",
     ),
 ]
 
