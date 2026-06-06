@@ -173,3 +173,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # An appearance counts as "verified present" if its latest owner confirmation
 # is within this window (see apps.appearances and docs/architecture/data-model.md).
 PRESENCE_FRESHNESS_WINDOW = timedelta(hours=2)
+
+# Geocoding (address -> coordinates), behind apps.core.geocoding. See ADR 0003.
+# Dev uses free OSM Nominatim; prod swaps to a storage-permitting provider via
+# env. Nominatim's usage policy requires a descriptive User-Agent.
+GEOCODING_PROVIDER = os.getenv("GEOCODING_PROVIDER", "nominatim")
+GEOCODING_USER_AGENT = os.getenv(
+    "GEOCODING_USER_AGENT", "Curbfeast/0.1 (+https://curbfeast.com)"
+)
+NOMINATIM_BASE_URL = os.getenv(
+    "NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org/search"
+)
+GEOCODING_TIMEOUT = float(os.getenv("GEOCODING_TIMEOUT", "5"))
+GEOCODING_MAX_RETRIES = int(os.getenv("GEOCODING_MAX_RETRIES", "2"))
+GEOCODING_BACKOFF = float(os.getenv("GEOCODING_BACKOFF", "0.5"))
