@@ -72,10 +72,12 @@ Cross-platform, free, available on both web and Expo (Google Fonts).
 
 | Role | Font | Notes |
 |---|---|---|
-| Headings / display | **Poppins** (600/700) | Friendly geometric, approachable but clean. Carries the personality. |
+| Headings / display | **Fraunces** (500/600/700, optical sizing) | Characterful "old style" serif. Carries the vintage-Americana / artisan-provisions personality. Display sizes only. |
 | Body / UI | **Inter** (400/500/600) | Highly legible at small sizes, neutral workhorse. |
 
-> **Confirmed (2026-06-05):** Poppins is the single display/brand font (including the logo wordmark); Inter is the body font. We weighed a second display font per audience (Nunito for owners) but chose one font for cohesion, lower risk, and a consistent logo. The owner-vs-customer "two tempos" difference comes from **treatment** (owner: restrained weight/size; customer: bold and large), not a different font.
+> **Confirmed (2026-06-06):** Fraunces is the single display/brand UI font (headings + wordmark stand-in); Inter is the body font. Chosen over Poppins (clean but no heritage) and the slab serifs (Zilla Slab/Bitter) for the most artisan warmth while staying legible. The owner-vs-customer "two tempos" difference comes from **treatment** (owner: restrained weight/size; customer: bold and large), not a different font.
+>
+> **Serif-on-screen note:** the display serif is used at large sizes only; all body, captions, and small UI stay Inter (sans). Fraunces is a low-to-moderate contrast face with optical sizing, so it renders crisply on modern high-DPI screens. Do **not** use Fraunces for body or small text. The final hand-lettered wordmark still comes from the logo artist; Fraunces is the system stand-in and the heading face.
 
 **Type scale** (px, mobile-first): 12 (caption), 14 (body-sm), 16 (body), 18 (lead), 20 (h4), 24 (h3), 30 (h2), 36 (h1). Line-height ~1.4 body, ~1.2 headings.
 

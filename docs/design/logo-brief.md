@@ -42,7 +42,7 @@ This replaces the earlier generic "map-pin + food" idea, the wagon is more disti
 ## Typography
 
 - **Brand / display (wordmark, headlines):** lean **vintage-Americana**, a characterful **slab serif** or tasteful western-tinged display / hand-lettered feel. This is where the personality lives.
-- **UI / body:** stays a clean, highly legible sans (we currently use **Inter**, with **Poppins** for some headings) so the app is fast to read, the twang seasons brand moments, it never compromises clarity. Deliver the wordmark as art; we don't need a full UI typeface.
+- **UI / body:** body and small UI stay a clean, highly legible sans (**Inter**). Headings and the in-app display type use **Fraunces** (a characterful old-style serif) as the heritage voice. So the twang seasons brand and heading moments while body copy stays fast to read. Deliver the wordmark as art; we don't need a full UI typeface.
 
 ## Colors (use these exact values)
 
