@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Find food trucks near you · Chuckwagon{% endblock %}
+{% block content %}
+<section class="mb-6">
+  <h1 class="font-display text-3xl font-bold">Find food trucks near you</h1>
+  <p class="text-ink-muted mt-1">
+    Showing trucks within {{ radius_km|floatformat:0 }} km of
+    <span class="font-medium text-ink">{{ location_label }}</span>{% if is_default_location %} <span class="text-ink-muted">(default area)</span>{% endif %}.
+  </p>
+  {% include "web/_location_bar.html" %}
+</section>
+
+{% if result_count %}
+  {% if live_appearances %}
+  <section class="mb-8">
+    <h2 class="font-display text-xl font-bold mb-3"><span class="text-status-here">●</span> Here now</h2>
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% for a in live_appearances %}{% include "web/_truck_result.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% if soon_appearances %}
+  <section class="mb-8">
+    <h2 class="font-display text-xl font-bold mb-3">Coming soon</h2>
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% for a in soon_appearances %}{% include "web/_truck_result.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% else %}
+  <div class="bg-surface border border-border rounded-2xl p-8 text-center">
+    <p class="text-4xl mb-2">🛻</p>
+    <p class="font-display text-lg font-semibold">No trucks here yet</p>
+    <p class="text-ink-muted mt-1">Nothing is scheduled within {{ radius_km|floatformat:0 }} km of {{ location_label }} right now. Try a different spot.</p>
+  </div>
+{% endif %}
+{% endblock %}

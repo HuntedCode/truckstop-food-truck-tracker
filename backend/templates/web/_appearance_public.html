@@ -1,0 +1,18 @@
+{% load tz %}
+{% comment %}Public read-only appearance row for the truck detail page. Expects
+`a` (Appearance) and `truck`.{% endcomment %}
+<div class="bg-surface border border-border rounded-2xl p-4">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <div class="font-medium">📍 {{ a.location_name|default:a.address }}</div>
+      {% if a.location_name %}<div class="text-sm text-ink-muted">{{ a.address }}</div>{% endif %}
+      <div class="text-sm text-ink-muted mt-1">
+        {% timezone truck.timezone %}{{ a.start_at|date:"D, M j" }} · {{ a.start_at|date:"g:i A" }} &ndash; {{ a.end_at|date:"g:i A" }}{% endtimezone %}
+      </div>
+    </div>
+    <span class="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap
+      {% if a.is_live %}bg-status-here/15 text-status-here{% else %}bg-status-soon/15 text-status-soon-strong{% endif %}">
+      {% if a.is_live %}● Here now{% else %}Scheduled{% endif %}
+    </span>
+  </div>
+</div>

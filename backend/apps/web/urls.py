@@ -1,19 +1,20 @@
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path
-from django.views.generic import RedirectView
 
 from .forms import EmailAuthenticationForm
 from .views import (
-    AppearanceAddressSearchView,
+    AddressSearchView,
     AppearanceCancelView,
     AppearanceConfirmView,
     AppearanceCreateView,
     AppearanceUpdateView,
     DashboardHomeView,
+    DiscoveryView,
     RegisterView,
     StyleGuideView,
     TruckCreateView,
+    TruckDetailView,
     TruckManageView,
     TruckStatusToggleView,
     TruckUpdateView,
@@ -21,9 +22,9 @@ from .views import (
 )
 
 urlpatterns = [
-    path(
-        "", RedirectView.as_view(pattern_name="dashboard", permanent=False), name="home"
-    ),
+    path("", DiscoveryView.as_view(), name="home"),
+    path("t/<slug:slug>/", TruckDetailView.as_view(), name="truck-detail"),
+    path("address-search/", AddressSearchView.as_view(), name="address-search"),
     path("accounts/register/", RegisterView.as_view(), name="register"),
     path(
         "accounts/login/",
@@ -76,11 +77,6 @@ urlpatterns = [
         "dashboard/appearance/<int:pk>/confirm/",
         AppearanceConfirmView.as_view(),
         name="appearance-confirm",
-    ),
-    path(
-        "dashboard/address-search/",
-        AppearanceAddressSearchView.as_view(),
-        name="address-search",
     ),
 ]
 
