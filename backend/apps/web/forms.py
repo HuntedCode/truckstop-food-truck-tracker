@@ -25,9 +25,12 @@ US_TIMEZONE_CHOICES = [
 ]
 
 
-class OwnerRegistrationForm(forms.Form):
-    """Owner sign-up for the web dashboard. (Customer sign-up lives on the
-    customer surfaces.)"""
+class _RegistrationForm(forms.Form):
+    """Shared web sign-up: email + password with confirmation and validation.
+    Subclasses set `role` to stamp the account type server-side (never from
+    posted data), so an owner form can't create a customer or vice versa."""
+
+    role = None  # set by subclasses
 
     email = forms.EmailField()
     display_name = forms.CharField(max_length=120, required=False)
@@ -62,9 +65,21 @@ class OwnerRegistrationForm(forms.Form):
         return User.objects.create_user(
             email=self.cleaned_data["email"],
             password=self.cleaned_data["password1"],
-            role=User.Role.OWNER,
+            role=self.role,
             display_name=self.cleaned_data.get("display_name", ""),
         )
+
+
+class OwnerRegistrationForm(_RegistrationForm):
+    """Owner sign-up for the web dashboard ("List your truck")."""
+
+    role = User.Role.OWNER
+
+
+class CustomerRegistrationForm(_RegistrationForm):
+    """Customer sign-up for the public site (follow trucks, get updates)."""
+
+    role = User.Role.CUSTOMER
 
 
 class EmailAuthenticationForm(AuthenticationForm):

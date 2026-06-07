@@ -49,9 +49,11 @@ Scoped to the requesting owner: another owner's objects are simply not found (40
 
 | Method | Path | Notes |
 |---|---|---|
-| GET / POST | `/follows/` | List own follows / follow a truck (`{ "truck": "<slug>" }`; must be publicly visible). Duplicate follow -> 400. |
+| GET / POST | `/follows/` | List own follows / follow a truck (`{ "truck": "<slug>" }`; must be publicly visible). Duplicate follow -> 400. Logs a FOLLOW engagement event. |
 | PATCH | `/follows/{id}/` | Toggle `notifications_muted` for a follow. |
-| DELETE | `/follows/{id}/` | Unfollow. |
+| DELETE | `/follows/{id}/` | Unfollow. Logs an UNFOLLOW engagement event. |
+
+> The web app has its own server-rendered follow surface (sign-up, login, `t/<slug>/follow|unfollow|mute/`, `/following/`) over the same `Follow` model; see [features/customer-accounts-follows.md](../features/customer-accounts-follows.md).
 
 ## Notifications (any authenticated user)
 

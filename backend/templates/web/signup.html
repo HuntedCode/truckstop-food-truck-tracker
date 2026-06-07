@@ -1,20 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Log in · Chuckwagon{% endblock %}
+{% block title %}Sign up · Chuckwagon{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto">
-  <h1 class="font-display text-2xl font-bold mb-6">Welcome back</h1>
+  <h1 class="font-display text-2xl font-bold mb-1">Find your trucks</h1>
+  <p class="text-ink-muted mb-6">Create an account to follow food trucks and know when they're nearby.</p>
 
   <form method="post" class="space-y-4">
     {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
     {% include "web/_form_fields.html" %}
     <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg py-2.5 transition-colors">
-      Log in
+      Create account
     </button>
   </form>
 
   <p class="text-sm text-ink-muted mt-4">
-    New here? <a href="{% url 'signup' %}" class="text-primary underline underline-offset-2">Sign up</a>
+    Already have an account? <a href="{% url 'login' %}" class="text-primary underline underline-offset-2">Log in</a>
   </p>
   <p class="text-sm text-ink-muted mt-2">
     Run a food truck? <a href="{% url 'register' %}" class="text-primary underline underline-offset-2">List your truck</a>

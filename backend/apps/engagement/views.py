@@ -5,7 +5,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from apps.core.permissions import IsCustomerRole
 
-from .models import Follow
+from .models import EngagementEvent, Follow
 from .serializers import EngagementEventSerializer, FollowSerializer
 
 
@@ -44,6 +44,16 @@ class FollowViewSet(
         if Follow.objects.filter(customer=self.request.user, truck=truck).exists():
             raise ValidationError("You already follow this truck.")
         serializer.save(customer=self.request.user)
+        EngagementEvent.log(
+            EngagementEvent.EventType.FOLLOW, user=self.request.user, truck=truck
+        )
+
+    def perform_destroy(self, instance):
+        truck = instance.truck
+        super().perform_destroy(instance)
+        EngagementEvent.log(
+            EngagementEvent.EventType.UNFOLLOW, user=self.request.user, truck=truck
+        )
 
 
 class EngagementEventCreateView(generics.CreateAPIView):

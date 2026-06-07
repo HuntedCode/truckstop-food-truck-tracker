@@ -72,3 +72,25 @@ class EngagementEvent(TimeStampedModel):
 
     def __str__(self):
         return f"{self.event_type} ({self.created_at:%Y-%m-%d})"
+
+    @classmethod
+    def log(
+        cls,
+        event_type,
+        *,
+        user=None,
+        truck=None,
+        appearance=None,
+        device_id="",
+        metadata=None,
+    ):
+        """Append one analytics event. The single place app code records
+        engagement, so the web and API surfaces log identically."""
+        return cls.objects.create(
+            event_type=event_type,
+            user=user,
+            truck=truck,
+            appearance=appearance,
+            device_id=device_id,
+            metadata=metadata or {},
+        )

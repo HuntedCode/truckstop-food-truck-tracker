@@ -94,7 +94,8 @@ System docs live in `docs/` (see `docs/README.md`). Per the global standard, whe
 - **Domain models**: Truck, Appearance, PresenceConfirmation, Cuisine, TruckVerification per `docs/architecture/data-model.md`, with the geo "near me" + "live now" querysets.
 - **Owner web** (`/dashboard/`, owner-only): create/edit truck, verification + activation pipeline, status toggle, post/edit/cancel appearances, "I'm here now" (HTMX), address search-and-pick. See `docs/features/owner-dashboard.md`.
 - **Customer discovery web** (`/`, public/anonymous): list-first nearby trucks (live-now then coming-soon), public truck detail (`/t/<slug>/`), location entry via search-and-pick or geolocation. See `docs/features/customer-discovery.md`.
+- **Customer accounts + web follows**: customer sign-up + role-aware login (web is now a first-class customer surface), follow/unfollow/mute on truck pages, a Following page, and FOLLOW/UNFOLLOW engagement logging. Push *delivery* is deferred to the mobile chunk. See `docs/features/customer-accounts-follows.md`.
 - **Resilient geocoding** wrapper (ADR 0003) + **image hardening** (EXIF strip, re-encode, bomb guard). Security gate tracked in `docs/architecture/security-checklist.md`.
 - **Brand locked**: "Bright Trail" palette + Fraunces/Inter type (`docs/design/`).
 
-271 backend tests passing. `mobile/` is not yet scaffolded. Likely next: customer accounts + follow/notify, or scaffold the Expo app against the discovery API.
+Backend tests passing (296). `mobile/` is not yet scaffolded. Likely next: push notification delivery (needs the Expo app + EAS build), or scaffold the Expo app against the discovery/follow API.

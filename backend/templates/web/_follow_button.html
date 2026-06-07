@@ -1,0 +1,31 @@
+{% comment %}Follow control for a signed-in customer on the truck detail page.
+Context: `truck` and `follow` (a Follow or None). HTMX swaps this whole
+#follow-control node on action; no-JS posts fall back to a redirect. CSRF for
+HTMX comes from the body hx-headers; {% csrf_token %} covers the no-JS post.
+{% endcomment %}
+<div id="follow-control" class="flex flex-wrap items-center gap-2">
+  {% if follow %}
+    <form method="post" action="{% url 'follow-delete' truck.slug %}"
+      hx-post="{% url 'follow-delete' truck.slug %}" hx-target="#follow-control" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button class="font-medium rounded-lg border border-status-here/40 text-status-here px-4 py-2 hover:bg-status-here/10 transition-colors">
+        ✓ Following
+      </button>
+    </form>
+    <form method="post" action="{% url 'follow-mute-toggle' truck.slug %}"
+      hx-post="{% url 'follow-mute-toggle' truck.slug %}" hx-target="#follow-control" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button class="text-sm font-medium rounded-lg border border-border text-ink-muted px-3 py-2 hover:bg-base transition-colors">
+        {% if follow.notifications_muted %}🔕 Unmute{% else %}🔔 Mute{% endif %}
+      </button>
+    </form>
+  {% else %}
+    <form method="post" action="{% url 'follow-create' truck.slug %}"
+      hx-post="{% url 'follow-create' truck.slug %}" hx-target="#follow-control" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button class="font-medium rounded-lg bg-primary hover:bg-primary-dark text-white px-4 py-2 transition-colors">
+        + Follow
+      </button>
+    </form>
+  {% endif %}
+</div>
