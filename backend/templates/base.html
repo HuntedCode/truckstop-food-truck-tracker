@@ -51,14 +51,16 @@
       <a href="{% url 'home' %}" class="font-display text-xl font-bold tracking-tight text-primary">Chuckwagon</a>
       <nav class="text-sm flex items-center gap-4 text-ink-muted">
         {% if user.is_authenticated %}
-          {% if user.is_owner %}<a href="{% url 'dashboard' %}" class="hover:text-ink">Dashboard</a>{% endif %}
+          {% if user.is_owner %}<a href="{% url 'dashboard' %}" class="hover:text-ink">Dashboard</a>
+          {% else %}<a href="{% url 'following' %}" class="hover:text-ink">Following</a>{% endif %}
           <span>{{ user.display_name|default:user.email }}</span>
           <form method="post" action="{% url 'logout' %}" class="inline">
             {% csrf_token %}
             <button class="hover:text-ink">Log out</button>
           </form>
         {% else %}
-          <a href="{% url 'login' %}" class="hover:text-ink">List your truck</a>
+          <a href="{% url 'login' %}" class="hover:text-ink">Log in</a>
+          <a href="{% url 'signup' %}" class="hover:text-ink">Sign up</a>
         {% endif %}
       </nav>
     </div>

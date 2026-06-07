@@ -102,8 +102,10 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Web (session-auth) login flow for the owner dashboard.
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "dashboard"
-LOGOUT_REDIRECT_URL = "login"
+# Post-login routing is role-aware in RoleAwareLoginView (owners -> dashboard,
+# customers -> discovery); this is the fallback. Logout lands on public discovery.
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "home"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

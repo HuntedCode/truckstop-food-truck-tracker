@@ -2,16 +2,21 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from .forms import EmailAuthenticationForm
 from .views import (
     AddressSearchView,
     AppearanceCancelView,
     AppearanceConfirmView,
     AppearanceCreateView,
     AppearanceUpdateView,
+    CustomerRegisterView,
     DashboardHomeView,
     DiscoveryView,
+    FollowCreateView,
+    FollowDeleteView,
+    FollowingListView,
+    FollowMuteToggleView,
     RegisterView,
+    RoleAwareLoginView,
     StyleGuideView,
     TruckCreateView,
     TruckDetailView,
@@ -24,17 +29,18 @@ from .views import (
 urlpatterns = [
     path("", DiscoveryView.as_view(), name="home"),
     path("t/<slug:slug>/", TruckDetailView.as_view(), name="truck-detail"),
-    path("address-search/", AddressSearchView.as_view(), name="address-search"),
-    path("accounts/register/", RegisterView.as_view(), name="register"),
+    path("t/<slug:slug>/follow/", FollowCreateView.as_view(), name="follow-create"),
+    path("t/<slug:slug>/unfollow/", FollowDeleteView.as_view(), name="follow-delete"),
     path(
-        "accounts/login/",
-        auth_views.LoginView.as_view(
-            template_name="web/login.html",
-            authentication_form=EmailAuthenticationForm,
-            redirect_authenticated_user=True,
-        ),
-        name="login",
+        "t/<slug:slug>/mute/",
+        FollowMuteToggleView.as_view(),
+        name="follow-mute-toggle",
     ),
+    path("following/", FollowingListView.as_view(), name="following"),
+    path("address-search/", AddressSearchView.as_view(), name="address-search"),
+    path("accounts/signup/", CustomerRegisterView.as_view(), name="signup"),
+    path("accounts/register/", RegisterView.as_view(), name="register"),
+    path("accounts/login/", RoleAwareLoginView.as_view(), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", DashboardHomeView.as_view(), name="dashboard"),
     path("dashboard/truck/new/", TruckCreateView.as_view(), name="truck-create"),

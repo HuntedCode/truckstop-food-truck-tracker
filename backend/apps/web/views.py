@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from apps.appearances.models import Appearance
@@ -14,15 +16,18 @@ from apps.core.geo import safe_point_from_latlng
 from apps.core.geocoding import GeocodingError
 from apps.core.geocoding import geocode
 from apps.core.geocoding import search as geocode_search
+from apps.engagement.models import EngagementEvent, Follow
 from apps.trucks.models import Truck
 
 from .forms import (
     AppearanceForm,
+    CustomerRegistrationForm,
+    EmailAuthenticationForm,
     OwnerRegistrationForm,
     TruckForm,
     TruckVerificationForm,
 )
-from .mixins import OwnerRequiredMixin
+from .mixins import CustomerRequiredMixin, OwnerRequiredMixin
 
 
 class RegisterView(FormView):
@@ -40,6 +45,56 @@ class RegisterView(FormView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
+
+
+def _safe_redirect_target(request, *candidates):
+    """Return the first candidate URL safe to redirect to (same host), or None.
+    Guards ?next= / Referer redirect-back against open redirects."""
+    for url in candidates:
+        if url and url_has_allowed_host_and_scheme(
+            url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return url
+    return None
+
+
+class CustomerRegisterView(FormView):
+    """Public customer sign-up ("Sign up"). Separate entry point from the owner
+    "List your truck" flow; role is stamped server-side by the form."""
+
+    template_name = "web/signup.html"
+    form_class = CustomerRegistrationForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        nxt = self.request.POST.get("next") or self.request.GET.get("next")
+        return _safe_redirect_target(self.request, nxt) or reverse("home")
+
+
+class RoleAwareLoginView(LoginView):
+    """Shared login that routes by role after sign-in: owners to the dashboard,
+    customers to discovery. An explicit ?next= still wins (e.g. "log in to
+    follow" returns the customer to the truck page)."""
+
+    template_name = "web/login.html"
+    authentication_form = EmailAuthenticationForm
+    redirect_authenticated_user = True
+
+    def get_default_redirect_url(self):
+        if self.request.user.is_authenticated and self.request.user.is_owner:
+            return reverse("dashboard")
+        return reverse("home")
 
 
 class DiscoveryView(TemplateView):
@@ -152,7 +207,96 @@ class TruckDetailView(DetailView):
         )
         ctx["live_appearances"] = [a for a in upcoming if a.is_live()]
         ctx["soon_appearances"] = [a for a in upcoming if not a.is_live()]
+        # Follow control state for a signed-in customer (None otherwise: owners
+        # and anonymous visitors see a different branch in the template).
+        user = self.request.user
+        if user.is_authenticated and user.is_customer:
+            ctx["follow"] = Follow.objects.filter(
+                customer=user, truck=self.object
+            ).first()
         return ctx
+
+
+class FollowActionView(CustomerRequiredMixin, View):
+    """Base for the customer follow/unfollow/mute POST actions on a truck.
+    HTMX requests get the re-rendered follow control; plain posts (no JS) fall
+    back to a safe redirect (next/Referer/truck page). Customer-only; anonymous
+    visitors are sent to log in and back via the mixin + ?next."""
+
+    def get_truck(self, slug):
+        truck = get_object_or_404(Truck, slug=slug)
+        if not truck.is_publicly_visible:
+            raise Http404("No truck matches the given query.")
+        return truck
+
+    def respond(self, request, truck, follow):
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "web/_follow_button.html",
+                {"truck": truck, "follow": follow},
+            )
+        target = _safe_redirect_target(
+            request,
+            request.POST.get("next"),
+            request.META.get("HTTP_REFERER"),
+        )
+        return redirect(target or reverse("truck-detail", args=[truck.slug]))
+
+
+class FollowCreateView(FollowActionView):
+    """Follow a truck. Idempotent (get_or_create); logs FOLLOW only on the
+    first follow."""
+
+    def post(self, request, slug):
+        truck = self.get_truck(slug)
+        follow, created = Follow.objects.get_or_create(
+            customer=request.user, truck=truck
+        )
+        if created:
+            EngagementEvent.log(
+                EngagementEvent.EventType.FOLLOW, user=request.user, truck=truck
+            )
+        return self.respond(request, truck, follow)
+
+
+class FollowDeleteView(FollowActionView):
+    """Unfollow a truck. Logs UNFOLLOW only if a follow actually existed."""
+
+    def post(self, request, slug):
+        truck = self.get_truck(slug)
+        deleted, _ = Follow.objects.filter(customer=request.user, truck=truck).delete()
+        if deleted:
+            EngagementEvent.log(
+                EngagementEvent.EventType.UNFOLLOW, user=request.user, truck=truck
+            )
+        return self.respond(request, truck, None)
+
+
+class FollowMuteToggleView(FollowActionView):
+    """Toggle per-truck notification mute on an existing follow (404 if the
+    customer doesn't follow this truck)."""
+
+    def post(self, request, slug):
+        truck = self.get_truck(slug)
+        follow = get_object_or_404(Follow, customer=request.user, truck=truck)
+        follow.notifications_muted = not follow.notifications_muted
+        follow.save(update_fields=["notifications_muted", "updated_at"])
+        return self.respond(request, truck, follow)
+
+
+class FollowingListView(CustomerRequiredMixin, ListView):
+    """A customer's followed trucks, with per-truck mute and unfollow."""
+
+    template_name = "web/following.html"
+    context_object_name = "follows"
+
+    def get_queryset(self):
+        return (
+            Follow.objects.filter(customer=self.request.user)
+            .select_related("truck", "truck__primary_cuisine")
+            .order_by("-created_at")
+        )
 
 
 class DashboardHomeView(OwnerRequiredMixin, TemplateView):

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Sign up · Chuckwagon{% endblock %}
+{% block title %}List your truck · Chuckwagon{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto">
-  <h1 class="font-display text-2xl font-bold mb-1">Run your truck</h1>
+  <h1 class="font-display text-2xl font-bold mb-1">List your truck</h1>
   <p class="text-ink-muted mb-6">Create your owner account to post where you'll be.</p>
 
   <form method="post" class="space-y-4">
@@ -15,6 +15,9 @@
 
   <p class="text-sm text-ink-muted mt-4">
     Already have one? <a href="{% url 'login' %}" class="text-primary underline underline-offset-2">Log in</a>
+  </p>
+  <p class="text-sm text-ink-muted mt-2">
+    Just looking for food? <a href="{% url 'signup' %}" class="text-primary underline underline-offset-2">Sign up as a customer</a>
   </p>
 </div>
 {% endblock %}

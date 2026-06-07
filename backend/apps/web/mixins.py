@@ -13,3 +13,14 @@ class OwnerRequiredMixin(LoginRequiredMixin):
         if request.user.is_authenticated and not request.user.is_owner:
             raise PermissionDenied("An owner account is required.")
         return super().dispatch(request, *args, **kwargs)
+
+
+class CustomerRequiredMixin(LoginRequiredMixin):
+    """Require an authenticated CUSTOMER. Anonymous -> login redirect (so they
+    can sign in and come back); authenticated owner -> 403 (owners can't follow
+    trucks). Same anonymous-first ordering as OwnerRequiredMixin."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_customer:
+            raise PermissionDenied("A customer account is required.")
+        return super().dispatch(request, *args, **kwargs)
