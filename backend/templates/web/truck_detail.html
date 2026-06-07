@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ truck.name }} · Chuckwagon{% endblock %}
+{% block content %}
+<a href="{% url 'home' %}" class="text-sm text-ink-muted hover:text-ink">&larr; Back to discovery</a>
+
+{% with cuisine=truck.primary_cuisine %}
+<div class="mt-3 bg-surface border border-border rounded-2xl overflow-hidden">
+  <div class="h-40 flex items-center justify-center text-6xl" style="background: {% if cuisine.color %}{{ cuisine.color }}{% else %}var(--color-primary){% endif %};">
+    {% if truck.hero_image %}
+      <img src="{{ truck.hero_image.url }}" alt="{{ truck.name }}" class="h-full w-full object-cover">
+    {% elif truck.logo %}
+      <img src="{{ truck.logo.url }}" alt="{{ truck.name }}" class="h-full w-full object-cover">
+    {% else %}
+      <span>{{ cuisine.icon|default:"🚚" }}</span>
+    {% endif %}
+  </div>
+  <div class="p-5">
+    <div class="flex items-center justify-between gap-3">
+      <h1 class="font-display text-2xl font-bold">{{ truck.name }}</h1>
+      <span class="text-status-here text-sm font-medium whitespace-nowrap">★ Verified</span>
+    </div>
+    <div class="text-ink-muted mt-0.5">
+      {{ cuisine.name|default:"Food truck" }}{% for tag in truck.cuisine_tags.all %} · {{ tag.name }}{% endfor %}
+    </div>
+    {% if truck.description %}<p class="mt-3">{{ truck.description }}</p>{% endif %}
+    <div class="mt-3 flex flex-wrap gap-4 text-sm">
+      {% if truck.website %}<a href="{{ truck.website }}" class="text-primary hover:underline" rel="noopener nofollow" target="_blank">Website</a>{% endif %}
+      {% if truck.instagram %}<a href="https://instagram.com/{{ truck.instagram }}" class="text-primary hover:underline" rel="noopener nofollow" target="_blank">Instagram</a>{% endif %}
+      {% if truck.phone %}<a href="tel:{{ truck.phone }}" class="text-primary hover:underline">{{ truck.phone }}</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+
+<h2 class="font-display text-xl font-bold mt-6 mb-3">Where to find {{ truck.name }}</h2>
+{% if live_appearances or soon_appearances %}
+  <div class="space-y-3">
+    {% for a in live_appearances %}{% include "web/_appearance_public.html" %}{% endfor %}
+    {% for a in soon_appearances %}{% include "web/_appearance_public.html" %}{% endfor %}
+  </div>
+{% else %}
+  <div class="bg-surface border border-border rounded-2xl p-6 text-center text-ink-muted">
+    No upcoming stops posted yet. Check back soon.
+  </div>
+{% endif %}
+{% endblock %}

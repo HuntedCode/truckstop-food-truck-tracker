@@ -98,10 +98,11 @@ def test_logout_ends_session(client):
     assert client.get(reverse("dashboard")).status_code == 302  # back to login
 
 
-def test_home_redirects_to_dashboard(client):
+def test_home_is_public_discovery(client):
+    # Home is the public customer discovery page, not an owner redirect.
     resp = client.get(reverse("home"))
-    assert resp.status_code == 302
-    assert resp.url == reverse("dashboard")
+    assert resp.status_code == 200
+    assert b"Find food trucks near you" in resp.content
 
 
 def test_login_redirects_authenticated_user(client):

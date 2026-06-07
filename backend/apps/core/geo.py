@@ -15,3 +15,13 @@ def point_from_latlng(lat, lng):
         return Point(float(lng), float(lat), srid=4326)
     except (TypeError, ValueError):
         raise ValidationError("latitude/longitude must be numbers.")
+
+
+def safe_point_from_latlng(lat, lng):
+    """Like point_from_latlng but returns None instead of raising on missing or
+    non-numeric input. For user-facing surfaces that should fall back gracefully
+    rather than error (e.g. the public discovery page reading query params)."""
+    try:
+        return point_from_latlng(lat, lng)
+    except ValidationError:
+        return None

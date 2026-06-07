@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.core.cache import cache
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -8,7 +10,9 @@ from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from apps.appearances.models import Appearance
+from apps.core.geo import safe_point_from_latlng
 from apps.core.geocoding import GeocodingError
+from apps.core.geocoding import geocode
 from apps.core.geocoding import search as geocode_search
 from apps.trucks.models import Truck
 
@@ -36,6 +40,119 @@ class RegisterView(FormView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
+
+
+class DiscoveryView(TemplateView):
+    """Public, anonymous-accessible customer discovery: nearby trucks, live now
+    first then coming soon. Location comes from query params (a picked address or
+    'use my location'), then a typed address geocoded, then the session, then the
+    configured default city, so the page is never empty (the cold-start rule)."""
+
+    template_name = "web/discover.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        point, label, is_default = self._resolve_location()
+
+        radius_km = settings.DISCOVERY_RADIUS_KM
+        nearby = (
+            Appearance.objects.public()
+            .upcoming()
+            .nearby(point, radius_km)
+            .select_related("truck", "truck__primary_cuisine")
+        )[: settings.DISCOVERY_MAX_RESULTS]
+
+        live, soon = [], []
+        for appearance in nearby:
+            (live if appearance.is_live() else soon).append(appearance)
+
+        ctx.update(
+            location_label=label,
+            is_default_location=is_default,
+            radius_km=radius_km,
+            live_appearances=live,
+            soon_appearances=soon,
+            result_count=len(live) + len(soon),
+        )
+        return ctx
+
+    def _resolve_location(self):
+        """Return (point, label, is_default), resolving the viewer's location by
+        priority and remembering an explicit choice in the session."""
+        params = self.request.GET
+
+        # 1) Explicit coordinates: a picked search match or "use my location".
+        point = safe_point_from_latlng(params.get("lat"), params.get("lng"))
+        if point is not None:
+            return self._remember(point, (params.get("label") or "").strip())
+
+        # 2) A typed address with no picked match: geocode the best hit.
+        address = (params.get("address") or "").strip()
+        if address:
+            try:
+                match = geocode(address)
+            except GeocodingError:
+                match = None
+            if match is not None:
+                point = safe_point_from_latlng(match.latitude, match.longitude)
+                if point is not None:
+                    return self._remember(point, match.display_name)
+
+        # 3) A location chosen earlier this session.
+        saved = self.request.session.get("discovery_location")
+        if saved:
+            point = safe_point_from_latlng(saved.get("lat"), saved.get("lng"))
+            if point is not None:
+                return point, saved.get("label") or "Your selected spot", False
+
+        # 4) Cold-start default so the page is never empty.
+        point = safe_point_from_latlng(
+            settings.DEFAULT_DISCOVERY_LAT, settings.DEFAULT_DISCOVERY_LNG
+        )
+        return point, settings.DEFAULT_DISCOVERY_LABEL, True
+
+    def _remember(self, point, label):
+        label = label or "Your selected spot"
+        self.request.session["discovery_location"] = {
+            "lat": point.y,
+            "lng": point.x,
+            "label": label,
+        }
+        return point, label, False
+
+
+class TruckDetailView(DetailView):
+    """Public truck profile: who they are plus where to find them next. 404
+    unless the truck is publicly visible (active + verified), so drafts and
+    paused trucks stay private."""
+
+    model = Truck
+    slug_field = "slug"
+    template_name = "web/truck_detail.html"
+    context_object_name = "truck"
+
+    def get_queryset(self):
+        return Truck.objects.select_related("primary_cuisine").prefetch_related(
+            "cuisine_tags"
+        )
+
+    def get_object(self, queryset=None):
+        truck = super().get_object(queryset)
+        if not truck.is_publicly_visible:
+            raise Http404("No truck matches the given query.")
+        return truck
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        upcoming = list(
+            Appearance.objects.public()
+            .upcoming()
+            .filter(truck=self.object)
+            .order_by("start_at")
+        )
+        ctx["live_appearances"] = [a for a in upcoming if a.is_live()]
+        ctx["soon_appearances"] = [a for a in upcoming if not a.is_live()]
+        return ctx
 
 
 class DashboardHomeView(OwnerRequiredMixin, TemplateView):
@@ -273,20 +390,24 @@ class AppearanceConfirmView(OwnerRequiredMixin, View):
         return redirect("truck-manage", slug=appearance.truck.slug)
 
 
-class AppearanceAddressSearchView(OwnerRequiredMixin, View):
-    """HTMX address search for the appearance form: returns a short list of
-    matches to pick from, so owners aren't typing a raw address blind.
+class AddressSearchView(View):
+    """HTMX address search: returns a short list of matches to pick from, so
+    neither owners (posting an appearance) nor customers (setting a discovery
+    location) type a raw address blind. Public, since customer discovery is
+    anonymous.
 
-    Per-user throttled, each call proxies to a shared, rate-limited geocoding
-    service, so one owner can't burn our quota for everyone. (A distributed
-    throttle is the pre-launch item; see docs/architecture/security-checklist.md.)
+    Each call proxies to a shared, rate-limited geocoding service, so it is
+    throttled per identity (the user when signed in, otherwise the client IP)
+    to keep one caller from burning our quota for everyone. (A distributed,
+    proxy-aware throttle is the pre-launch item; see
+    docs/architecture/security-checklist.md.)
     """
 
-    THROTTLE_LIMIT = 20  # searches per window, per user
+    THROTTLE_LIMIT = 20  # searches per window, per identity
     THROTTLE_WINDOW = 60  # seconds
 
     def get(self, request):
-        if self._is_throttled(request.user):
+        if self._is_throttled(request):
             return render(
                 request,
                 "web/_address_results.html",
@@ -305,10 +426,10 @@ class AppearanceAddressSearchView(OwnerRequiredMixin, View):
                 context["error"] = "Address search is unavailable right now. Try again."
         return render(request, "web/_address_results.html", context)
 
-    def _is_throttled(self, user):
+    def _is_throttled(self, request):
         # Fixed-window counter in the cache. incr() does not reset the TTL, so
         # the window is a true THROTTLE_WINDOW seconds.
-        key = f"geocode-search-throttle:{user.pk}"
+        key = f"geocode-search-throttle:{self._identity(request)}"
         if cache.add(key, 1, self.THROTTLE_WINDOW):
             return False
         try:
@@ -317,6 +438,14 @@ class AppearanceAddressSearchView(OwnerRequiredMixin, View):
             # Expired between add and incr: count this as a fresh window.
             cache.add(key, 1, self.THROTTLE_WINDOW)
             return False
+
+    def _identity(self, request):
+        if request.user.is_authenticated:
+            return f"user:{request.user.pk}"
+        # REMOTE_ADDR is not client-spoofable at the TCP layer. Behind a proxy
+        # in prod this becomes the proxy's IP; the pre-launch item is to make
+        # this proxy-aware (trusted XFF) so anonymous throttling stays per-client.
+        return f"ip:{request.META.get('REMOTE_ADDR', 'unknown')}"
 
 
 # Single source for the style-guide swatches; mirrors the design-system tokens.
@@ -333,7 +462,7 @@ PALETTE = [
     (
         "Heritage",
         [
-            ("Wagon wood", "#6F4A2E", "Saddle brown — heritage chrome (owner)"),
+            ("Wagon wood", "#6F4A2E", "Saddle brown, heritage chrome (owner)"),
             ("Sage", "#7E9466", "Soft prairie-green accent"),
         ],
     ),

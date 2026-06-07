@@ -187,3 +187,13 @@ NOMINATIM_BASE_URL = os.getenv(
 GEOCODING_TIMEOUT = float(os.getenv("GEOCODING_TIMEOUT", "5"))
 GEOCODING_MAX_RETRIES = int(os.getenv("GEOCODING_MAX_RETRIES", "2"))
 GEOCODING_BACKOFF = float(os.getenv("GEOCODING_BACKOFF", "0.5"))
+
+# Public customer discovery (apps.web DiscoveryView). When a visitor has not
+# chosen a location yet, the page centers on this default city so the first view
+# lands on real nearby trucks instead of an empty list (the cold-start rule).
+# Defaults match the dev seed data (downtown Austin); override per deploy.
+DEFAULT_DISCOVERY_LAT = float(os.getenv("DEFAULT_DISCOVERY_LAT", "30.2672"))
+DEFAULT_DISCOVERY_LNG = float(os.getenv("DEFAULT_DISCOVERY_LNG", "-97.7431"))
+DEFAULT_DISCOVERY_LABEL = os.getenv("DEFAULT_DISCOVERY_LABEL", "Downtown Austin, TX")
+DISCOVERY_RADIUS_KM = float(os.getenv("DISCOVERY_RADIUS_KM", "8"))
+DISCOVERY_MAX_RESULTS = int(os.getenv("DISCOVERY_MAX_RESULTS", "50"))

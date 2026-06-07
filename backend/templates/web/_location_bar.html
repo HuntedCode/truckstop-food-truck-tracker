@@ -1,0 +1,61 @@
+{% comment %}Customer location picker for discovery. GET-submits to `home` with
+lat/lng/label so the whole list re-renders server-side. Reuses the shared
+address-search HTMX endpoint + _address_results.html partial (its buttons call
+selectAddress, defined below for this page).{% endcomment %}
+<form method="get" action="{% url 'home' %}" class="mt-4 bg-surface border border-border rounded-2xl p-4">
+  <label for="discovery-address" class="block text-sm font-medium mb-1">Change location</label>
+  <div class="flex gap-2">
+    <input type="text" id="discovery-address" name="address" placeholder="Street, city, state" autocomplete="off">
+    <button type="button"
+      hx-get="{% url 'address-search' %}"
+      hx-include="#discovery-address"
+      hx-target="#discovery-address-results"
+      hx-swap="innerHTML"
+      class="shrink-0 font-medium rounded-lg border border-border text-ink px-4 hover:bg-base transition-colors">
+      Search
+    </button>
+  </div>
+  <p class="text-xs text-ink-muted mt-1">Type a city (and street if you like), Search, then pick a match. Or use your location.</p>
+  <div id="discovery-address-results"></div>
+  <input type="hidden" name="lat" id="discovery-lat">
+  <input type="hidden" name="lng" id="discovery-lng">
+  <input type="hidden" name="label" id="discovery-label">
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button type="submit" id="discovery-submit" class="font-medium rounded-lg bg-primary hover:bg-primary-dark text-white px-4 py-2 transition-colors">Show trucks</button>
+    <button type="button" onclick="useMyLocation(this)" class="font-medium rounded-lg border border-border text-ink px-4 py-2 hover:bg-base transition-colors">Use my location</button>
+    <span id="geo-status" class="text-sm text-ink-muted" role="status"></span>
+  </div>
+</form>
+
+<script>
+  // Pick a searched match: fill the hidden coords + label, clear the results.
+  function selectAddress(btn) {
+    document.getElementById('discovery-address').value = btn.dataset.address;
+    document.getElementById('discovery-lat').value = btn.dataset.lat;
+    document.getElementById('discovery-lng').value = btn.dataset.lng;
+    document.getElementById('discovery-label').value = btn.dataset.address;
+    document.getElementById('discovery-address-results').innerHTML = '';
+    document.getElementById('discovery-submit').focus();
+  }
+  // Browser geolocation: recenter discovery on the visitor, then reload.
+  function useMyLocation(btn) {
+    var status = document.getElementById('geo-status');
+    if (!navigator.geolocation) {
+      status.textContent = 'Location is not available on this device.';
+      return;
+    }
+    status.textContent = 'Locating…';
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        document.getElementById('discovery-lat').value = pos.coords.latitude;
+        document.getElementById('discovery-lng').value = pos.coords.longitude;
+        document.getElementById('discovery-label').value = 'My location';
+        document.getElementById('discovery-address').value = '';
+        btn.form.submit();
+      },
+      function () {
+        status.textContent = "Couldn't get your location. Try entering an address instead.";
+      }
+    );
+  }
+</script>

@@ -362,15 +362,16 @@ def test_address_search_handles_service_down(mock_search, client):
     assert b"unavailable" in resp.content
 
 
-def test_address_search_forbidden_for_customer(client):
+def test_address_search_allowed_for_customer(client):
+    # Now a shared public endpoint (customer discovery uses it too), so a
+    # signed-in customer is no longer forbidden.
     client.force_login(UserFactory())
-    assert client.get(reverse("address-search"), {"address": "x"}).status_code == 403
+    assert client.get(reverse("address-search"), {"address": "x"}).status_code == 200
 
 
-def test_address_search_requires_login(client):
-    resp = client.get(reverse("address-search"), {"address": "x"})
-    assert resp.status_code == 302
-    assert reverse("login") in resp.url
+def test_address_search_allowed_for_anonymous(client):
+    # Public: customer discovery sets a location without an account.
+    assert client.get(reverse("address-search"), {"address": "x"}).status_code == 200
 
 
 @patch("apps.web.forms.geocode")
@@ -428,10 +429,10 @@ def test_address_search_escapes_display_name(mock_search, client):
 
 
 def test_address_search_is_rate_limited(client, monkeypatch):
-    from apps.web.views import AppearanceAddressSearchView
+    from apps.web.views import AddressSearchView
 
     cache.clear()
-    monkeypatch.setattr(AppearanceAddressSearchView, "THROTTLE_LIMIT", 2)
+    monkeypatch.setattr(AddressSearchView, "THROTTLE_LIMIT", 2)
     client.force_login(OwnerFactory())
     url = reverse("address-search")
     with patch("apps.web.views.geocode_search", return_value=[]):
