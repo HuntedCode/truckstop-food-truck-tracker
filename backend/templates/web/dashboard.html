@@ -45,19 +45,25 @@
         </ol>
       {% endif %}
 
-      <div class="mt-3 flex items-center justify-end gap-2">
-        {% if state == 'setup' or state == 'needs_attention' %}
-          <a href="{% url 'truck-verify' truck.slug %}" class="font-medium text-sm rounded-lg bg-primary hover:bg-primary-dark text-white px-3 py-1.5 transition-colors">Get verified</a>
-        {% elif state == 'live' %}
+      <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {% if state == 'live' %}
+          {# Posting where/when is the main ongoing task for a live truck. #}
+          <a href="{% url 'truck-manage' truck.slug %}" class="font-medium text-sm rounded-lg bg-primary hover:bg-primary-dark text-white px-3 py-1.5 transition-colors">+ Post location</a>
           <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
             {% csrf_token %}
             <button class="font-medium text-sm rounded-lg border border-border text-ink-muted px-3 py-1.5 hover:bg-base transition-colors">Pause</button>
           </form>
+        {% elif state == 'setup' or state == 'needs_attention' %}
+          <a href="{% url 'truck-verify' truck.slug %}" class="font-medium text-sm rounded-lg bg-primary hover:bg-primary-dark text-white px-3 py-1.5 transition-colors">Get verified</a>
+          <a href="{% url 'truck-manage' truck.slug %}" class="font-medium text-sm rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Schedule</a>
         {% elif state == 'paused' %}
+          <a href="{% url 'truck-manage' truck.slug %}" class="font-medium text-sm rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Schedule</a>
           <form method="post" action="{% url 'truck-status-toggle' truck.slug %}">
             {% csrf_token %}
             <button class="font-medium text-sm rounded-lg border border-status-here/40 text-status-here px-3 py-1.5 hover:bg-status-here/10 transition-colors">Resume</button>
           </form>
+        {% else %}
+          <a href="{% url 'truck-manage' truck.slug %}" class="font-medium text-sm rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Schedule</a>
         {% endif %}
         <a href="{% url 'truck-edit' truck.slug %}" class="font-medium text-sm rounded-lg border border-border text-ink px-3 py-1.5 hover:bg-base transition-colors">Edit</a>
       </div>
