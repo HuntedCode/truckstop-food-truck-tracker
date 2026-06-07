@@ -5,7 +5,7 @@
 
   <section>
     <h1 class="font-display text-3xl font-bold">Style guide</h1>
-    <p class="text-ink-muted">Warm Street-Food: palette, type, and components. Dev reference.</p>
+    <p class="text-ink-muted">Bright Trail: the locked palette, type, and components. Dev reference.</p>
   </section>
 
   <!-- Palette -->
@@ -26,37 +26,6 @@
       {% endfor %}
     </div>
     {% endfor %}
-  </section>
-
-  <!-- Primary hue options (interactive) -->
-  <section>
-    <h2 class="font-display text-xl font-bold mb-1">Primary hue options</h2>
-    <p class="text-ink-muted text-sm mb-3">Tap one to preview it live across this whole page: the header wordmark, buttons, and the warm customer header all recolor.</p>
-    <div class="grid grid-cols-3 gap-3 max-w-md">
-      <button type="button" onclick="setPrimary('#E84A27', '#C73C1E')" class="text-center">
-        <div class="h-16 rounded-xl border border-border hover:ring-2 ring-ink/20" style="background: #E84A27;"></div>
-        <div class="text-xs mt-1 font-mono">#E84A27</div>
-        <div class="text-xs text-ink-muted">Current (bright)</div>
-      </button>
-      <button type="button" onclick="setPrimary('#D2401F', '#B5371A')" class="text-center">
-        <div class="h-16 rounded-xl border border-border hover:ring-2 ring-ink/20" style="background: #D2401F;"></div>
-        <div class="text-xs mt-1 font-mono">#D2401F</div>
-        <div class="text-xs text-ink-muted">Slightly deeper</div>
-      </button>
-      <button type="button" onclick="setPrimary('#B23A20', '#95301B')" class="text-center">
-        <div class="h-16 rounded-xl border border-border hover:ring-2 ring-ink/20" style="background: #B23A20;"></div>
-        <div class="text-xs mt-1 font-mono">#B23A20</div>
-        <div class="text-xs text-ink-muted">Brick</div>
-      </button>
-    </div>
-    <p class="text-xs text-ink-muted mt-2">Reference swatches above stay fixed; the components below follow your pick.</p>
-    <script>
-      function setPrimary(primary, dark) {
-        const root = document.documentElement.style;
-        root.setProperty('--color-primary', primary);
-        root.setProperty('--color-primary-dark', dark);
-      }
-    </script>
   </section>
 
   <!-- Typography (interactive) -->
@@ -132,14 +101,14 @@
   <!-- Two tempos -->
   <section>
     <h2 class="font-display text-xl font-bold mb-1">Two tempos</h2>
-    <p class="text-ink-muted text-sm mb-4">Same palette, dialed differently per audience.</p>
+    <p class="text-ink-muted text-sm mb-4">Same palette, dialed differently per audience: owners lead with calm wagon-wood chrome, customers with the bright hero.</p>
     <div class="grid md:grid-cols-2 gap-4">
 
-      <!-- Owner / professional -->
+      <!-- Owner / professional: wagon-wood chrome -->
       <div class="border border-border rounded-2xl overflow-hidden">
-        <div class="px-4 py-2 bg-surface border-b border-border flex items-center justify-between">
-          <span class="font-display font-bold text-primary">Chuckwagon</span>
-          <span class="text-xs text-ink-muted">owner · professional</span>
+        <div class="px-4 py-2 bg-wagon-wood text-base flex items-center justify-between">
+          <span class="font-display font-bold">Chuckwagon</span>
+          <span class="text-xs opacity-85">owner · professional</span>
         </div>
         <div class="p-4 bg-base">
           <div class="bg-surface border border-border rounded-xl p-4">
@@ -156,7 +125,7 @@
         </div>
       </div>
 
-      <!-- Customer / warm -->
+      <!-- Customer / warm: bright hero chrome -->
       <div class="border border-border rounded-2xl overflow-hidden">
         <div class="px-4 py-2 bg-primary text-white flex items-center justify-between">
           <span class="font-display font-bold">Chuckwagon</span>

@@ -52,11 +52,12 @@ This replaces the earlier generic "map-pin + food" idea, the wagon is more disti
 | Primary dark (pressed/hover) | `#C73C1E` |
 | **Accent — mustard amber** | `#F6A623` |
 | Accent dark | `#D98911` |
-| Background — warm cream | `#FFF8F0` |
+| **Heritage — wagon-wood brown** | `#6F4A2E` |
+| Background — warm parchment | `#FCF4E8` |
 | Surface — white | `#FFFFFF` |
 | Ink — espresso (dark text / mono mark) | `#2B2118` |
 
-This warm tomato/mustard/cream/espresso set already reads vintage-Americana, so it fits the heritage direction well. The mark should be recognizable primarily in **tomato `#E84A27`**, and also work in **solid white** (on tomato) and **solid espresso** (mono). (An earthy wagon-wood brown may get added in a later design pass; the above are the current source of truth.)
+This is the locked **"Bright Trail"** palette (confirmed 2026-06-06): a bright tomato hero plus warm heritage neutrals (parchment, wagon-wood, espresso), which reads vintage-Americana without dulling the appetizing energy. The mark should be recognizable primarily in **tomato `#E84A27`**, and also work in **solid white** (on tomato) and **solid espresso** (mono). **Wagon-wood `#6F4A2E`** is the heritage chrome color (it leads the calmer owner-side surfaces); a wagon mark in wagon-wood brown on parchment is a valid lockup, but tomato is the primary brand color.
 
 ## Deliverables requested
 

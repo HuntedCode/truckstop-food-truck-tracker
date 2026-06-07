@@ -35,13 +35,23 @@ Defined once as the source of truth. Web consumes them as CSS custom properties;
 
 | Token | Hex | Use |
 |---|---|---|
-| `color.base` | `#FFF8F0` | App background (warm cream). |
+| `color.base` | `#FCF4E8` | App background (warm parchment). |
 | `color.surface` | `#FFFFFF` | Cards, sheets, elevated surfaces. |
 | `color.ink` | `#2B2118` | Primary text (espresso). |
 | `color.ink.muted` | `#6B5D50` | Secondary text, captions. |
-| `color.border` | `#E7DDD2` | Hairlines, dividers, card borders. |
+| `color.border` | `#EADFCB` | Hairlines, dividers, card borders (tan). |
 
-> **Primary confirmed (2026-06-05):** `#E84A27` (bright tomato), chosen over deeper variants after in-context review. The brightness carries the appetizing energy the brand wants; the deeper tones read muted.
+### Heritage accents
+
+These carry the vintage-Americana feel without dulling the bright hero. The warmth comes from the neutrals and these accents, not from muting the primary.
+
+| Token | Hex | Use |
+|---|---|---|
+| `color.wagon-wood` | `#6F4A2E` | Heritage chrome (saddle brown). Owner-side header/nav, display moments where the calm professional tone leads. |
+| `color.sage` | `#7E9466` | Soft prairie-green accent for fresh/secondary touches. Distinct from `status.here` so it never reads as a live signal. |
+
+> **Palette locked (2026-06-06): "Bright Trail".** A bright tomato hero plus heritage neutrals (parchment, tan, wagon-wood, espresso). Chosen over a fully-muted "Trail" take (read too soft for an app) and an orange/campfire variant. The brightness carries the appetizing energy; the western/vintage feel lives in the warm neutrals and the wagon-wood chrome, not in dulling the primary.
+> **Two-tempo chrome:** owner surfaces lead with `wagon-wood` headers (calm, professional); customer surfaces lead with `primary` headers (energetic). Same palette, different emphasis.
 
 ### Semantic status (mapped to the spine)
 

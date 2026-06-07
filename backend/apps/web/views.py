@@ -331,13 +331,20 @@ PALETTE = [
         ],
     ),
     (
+        "Heritage",
+        [
+            ("Wagon wood", "#6F4A2E", "Saddle brown — heritage chrome (owner)"),
+            ("Sage", "#7E9466", "Soft prairie-green accent"),
+        ],
+    ),
+    (
         "Neutrals",
         [
-            ("Base", "#FFF8F0", "App background (warm cream)"),
+            ("Base", "#FCF4E8", "App background (warm parchment)"),
             ("Surface", "#FFFFFF", "Cards, sheets"),
             ("Ink", "#2B2118", "Primary text (espresso)"),
             ("Ink muted", "#6B5D50", "Secondary text"),
-            ("Border", "#E7DDD2", "Hairlines, dividers"),
+            ("Border", "#EADFCB", "Hairlines, dividers (tan)"),
         ],
     ),
     (
