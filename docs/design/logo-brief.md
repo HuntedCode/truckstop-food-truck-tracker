@@ -42,7 +42,7 @@ This replaces the earlier generic "map-pin + food" idea, the wagon is more disti
 ## Typography
 
 - **Brand / display (wordmark, headlines):** lean **vintage-Americana**, a characterful **slab serif** or tasteful western-tinged display / hand-lettered feel. This is where the personality lives.
-- **UI / body:** stays a clean, highly legible sans (we currently use **Inter**, with **Poppins** for some headings) so the app is fast to read, the twang seasons brand moments, it never compromises clarity. Deliver the wordmark as art; we don't need a full UI typeface.
+- **UI / body:** body and small UI stay a clean, highly legible sans (**Inter**). Headings and the in-app display type use **Fraunces** (a characterful old-style serif) as the heritage voice. So the twang seasons brand and heading moments while body copy stays fast to read. Deliver the wordmark as art; we don't need a full UI typeface.
 
 ## Colors (use these exact values)
 
@@ -52,11 +52,12 @@ This replaces the earlier generic "map-pin + food" idea, the wagon is more disti
 | Primary dark (pressed/hover) | `#C73C1E` |
 | **Accent — mustard amber** | `#F6A623` |
 | Accent dark | `#D98911` |
-| Background — warm cream | `#FFF8F0` |
+| **Heritage — wagon-wood brown** | `#6F4A2E` |
+| Background — warm parchment | `#FCF4E8` |
 | Surface — white | `#FFFFFF` |
 | Ink — espresso (dark text / mono mark) | `#2B2118` |
 
-This warm tomato/mustard/cream/espresso set already reads vintage-Americana, so it fits the heritage direction well. The mark should be recognizable primarily in **tomato `#E84A27`**, and also work in **solid white** (on tomato) and **solid espresso** (mono). (An earthy wagon-wood brown may get added in a later design pass; the above are the current source of truth.)
+This is the locked **"Bright Trail"** palette (confirmed 2026-06-06): a bright tomato hero plus warm heritage neutrals (parchment, wagon-wood, espresso), which reads vintage-Americana without dulling the appetizing energy. The mark should be recognizable primarily in **tomato `#E84A27`**, and also work in **solid white** (on tomato) and **solid espresso** (mono). **Wagon-wood `#6F4A2E`** is the heritage chrome color (it leads the calmer owner-side surfaces); a wagon mark in wagon-wood brown on parchment is a valid lockup, but tomato is the primary brand color.
 
 ## Deliverables requested
 

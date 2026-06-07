@@ -35,13 +35,23 @@ Defined once as the source of truth. Web consumes them as CSS custom properties;
 
 | Token | Hex | Use |
 |---|---|---|
-| `color.base` | `#FFF8F0` | App background (warm cream). |
+| `color.base` | `#FCF4E8` | App background (warm parchment). |
 | `color.surface` | `#FFFFFF` | Cards, sheets, elevated surfaces. |
 | `color.ink` | `#2B2118` | Primary text (espresso). |
 | `color.ink.muted` | `#6B5D50` | Secondary text, captions. |
-| `color.border` | `#E7DDD2` | Hairlines, dividers, card borders. |
+| `color.border` | `#EADFCB` | Hairlines, dividers, card borders (tan). |
 
-> **Primary confirmed (2026-06-05):** `#E84A27` (bright tomato), chosen over deeper variants after in-context review. The brightness carries the appetizing energy the brand wants; the deeper tones read muted.
+### Heritage accents
+
+These carry the vintage-Americana feel without dulling the bright hero. The warmth comes from the neutrals and these accents, not from muting the primary.
+
+| Token | Hex | Use |
+|---|---|---|
+| `color.wagon-wood` | `#6F4A2E` | Heritage chrome (saddle brown). Owner-side header/nav, display moments where the calm professional tone leads. |
+| `color.sage` | `#7E9466` | Soft prairie-green accent for fresh/secondary touches. Distinct from `status.here` so it never reads as a live signal. |
+
+> **Palette locked (2026-06-06): "Bright Trail".** A bright tomato hero plus heritage neutrals (parchment, tan, wagon-wood, espresso). Chosen over a fully-muted "Trail" take (read too soft for an app) and an orange/campfire variant. The brightness carries the appetizing energy; the western/vintage feel lives in the warm neutrals and the wagon-wood chrome, not in dulling the primary.
+> **Two-tempo chrome:** owner surfaces lead with `wagon-wood` headers (calm, professional); customer surfaces lead with `primary` headers (energetic). Same palette, different emphasis.
 
 ### Semantic status (mapped to the spine)
 
@@ -62,10 +72,12 @@ Cross-platform, free, available on both web and Expo (Google Fonts).
 
 | Role | Font | Notes |
 |---|---|---|
-| Headings / display | **Poppins** (600/700) | Friendly geometric, approachable but clean. Carries the personality. |
+| Headings / display | **Fraunces** (500/600/700, optical sizing) | Characterful "old style" serif. Carries the vintage-Americana / artisan-provisions personality. Display sizes only. |
 | Body / UI | **Inter** (400/500/600) | Highly legible at small sizes, neutral workhorse. |
 
-> **Confirmed (2026-06-05):** Poppins is the single display/brand font (including the logo wordmark); Inter is the body font. We weighed a second display font per audience (Nunito for owners) but chose one font for cohesion, lower risk, and a consistent logo. The owner-vs-customer "two tempos" difference comes from **treatment** (owner: restrained weight/size; customer: bold and large), not a different font.
+> **Confirmed (2026-06-06):** Fraunces is the single display/brand UI font (headings + wordmark stand-in); Inter is the body font. Chosen over Poppins (clean but no heritage) and the slab serifs (Zilla Slab/Bitter) for the most artisan warmth while staying legible. The owner-vs-customer "two tempos" difference comes from **treatment** (owner: restrained weight/size; customer: bold and large), not a different font.
+>
+> **Serif-on-screen note:** the display serif is used at large sizes only; all body, captions, and small UI stay Inter (sans). Fraunces is a low-to-moderate contrast face with optical sizing, so it renders crisply on modern high-DPI screens. Do **not** use Fraunces for body or small text. The final hand-lettered wordmark still comes from the logo artist; Fraunces is the system stand-in and the heading face.
 
 **Type scale** (px, mobile-first): 12 (caption), 14 (body-sm), 16 (body), 18 (lead), 20 (h4), 24 (h3), 30 (h2), 36 (h1). Line-height ~1.4 body, ~1.2 headings.
 
