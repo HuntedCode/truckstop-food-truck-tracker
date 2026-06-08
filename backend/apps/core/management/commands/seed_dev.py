@@ -96,8 +96,10 @@ class Command(BaseCommand):
                 },
             )
             # Refresh (or create) a currently-live appearance on every run so the
-            # manage page and the "I'm here now" button always have something to
-            # act on, even if the truck was seeded days ago.
+            # manage page, discovery, and the "I'm here now" button always have
+            # something to act on. The window runs a couple of days out so the
+            # demo trucks don't silently drop off discovery after a few hours of
+            # testing (re-run this command any time to recenter on "now").
             Appearance.objects.update_or_create(
                 truck=truck,
                 location_name="Downtown Austin",
@@ -107,7 +109,7 @@ class Command(BaseCommand):
                     "coordinates_confirmed": True,
                     "status": Appearance.Status.SCHEDULED,
                     "start_at": now - timedelta(hours=1),
-                    "end_at": now + timedelta(hours=3),
+                    "end_at": now + timedelta(days=2),
                 },
             )
         # A truck mid-setup, so the activation pipeline (Get verified -> approve
