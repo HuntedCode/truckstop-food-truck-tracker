@@ -10,8 +10,8 @@ export default function DiscoverScreen() {
           <Text className="mt-1 font-sans text-base text-ink">
             Find food trucks near you.
           </Text>
-          <View className="mt-4 self-start rounded-full bg-status-here/15 px-3 py-1">
-            <Text className="font-sans-semibold text-xs text-status-here">
+          <View className="mt-4 self-start rounded-full bg-status-here px-3 py-1">
+            <Text className="font-sans-semibold text-xs text-surface">
               ● Skeleton is live
             </Text>
           </View>

@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "chuckwagon",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
