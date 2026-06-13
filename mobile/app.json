@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Chuckwagon",
+    "slug": "chuckwagon",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "chuckwagon",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.chuckwagon.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
